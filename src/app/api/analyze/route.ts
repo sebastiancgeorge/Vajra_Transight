@@ -1,13 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server';
 import {z} from 'zod';
-import {summarizeConversationAndExtractTopics} from '@/ai/flows/summarize-conversation-and-extract-topics';
-import {identifyPrimaryCustomerIntent} from '@/ai/flows/identify-primary-customer-intent';
-import {analyzeSentimentTimeline} from '@/ai/flows/analyze-sentiment-timeline';
-import {detectCompliancePolicyViolations} from '@/ai/flows/detect-compliance-policy-violations-flow';
-import {generateAgentPerformanceCoaching} from '@/ai/flows/generate-agent-performance-coaching';
-import { detectLanguages } from '@/ai/flows/detect-languages-flow';
-import { classifyCallOutcome } from '@/ai/flows/classify-call-outcome-flow';
-import { generateRiskScore } from '@/ai/flows/generate-risk-score-flow';
+import { analyzeConversation } from '@/ai/flows/analyze-conversation';
 import {policyDocuments} from '@/lib/policies';
 import type { AnalysisResult } from '@/lib/types';
 
@@ -15,14 +8,14 @@ const AnalyzeRequestSchema = z.object({
   transcript: z.string(),
 });
 
+// Helper to extract agent name from transcript, e.g., "Agent (Sarah):"
 function extractAgentName(transcript: string): string {
   const match = transcript.match(/Agent \((.*?)\):/);
   return match ? match[1] : 'Unknown Agent';
 }
 
 export async function POST(req: NextRequest) {
-  // API Key Authentication has been removed for local development simplicity.
-  // Consider re-enabling for production environments.
+  // Simplified auth for local dev, but you might re-enable this in production.
   // const apiKey = req.headers.get('x-api-key');
   // if (apiKey !== process.env.ANALYSIS_API_KEY) {
   //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -34,66 +27,33 @@ export async function POST(req: NextRequest) {
 
     const agentName = extractAgentName(transcript);
 
-    const [
-      summaryAndTopics,
-      intent,
-      sentimentTimelineResult,
-      violationsResult,
-      languagesResult,
-      outcomeResult,
-      riskScoreResult,
-    ] = await Promise.all([
-      summarizeConversationAndExtractTopics({transcript}),
-      identifyPrimaryCustomerIntent({transcript}),
-      analyzeSentimentTimeline({transcript}),
-      detectCompliancePolicyViolations({
-        conversationTranscript: transcript,
-        policyDocuments: policyDocuments,
-      }),
-      detectLanguages({ transcript }),
-      classifyCallOutcome({ transcript }),
-      generateRiskScore({ transcript }),
-    ]);
+    // Call the single, consolidated analysis flow
+    const analysisOutput = await analyzeConversation({
+      transcript,
+      policyDocuments,
+    });
 
-    const coachingInput = {
-      conversationTranscript: transcript,
-      agentName: agentName,
-      overallSentiment: summaryAndTopics.overallSentiment,
-      customerIntent: intent.primaryCustomerIntent,
-      keyTopics: summaryAndTopics.topics,
-      extractedPolicies: policyDocuments.join('\n'),
-    };
-
-    const agentCoaching = await generateAgentPerformanceCoaching(coachingInput);
-
-    // The API now returns a raw analysis object.
-    // The client will be responsible for adding trends, avatar URLs, and saving to Firestore.
+    // The AI now returns the complete analysis. We just need to structure it
+    // for our application's `AnalysisResult` type.
     const result: Omit<AnalysisResult, 'id' | 'createdAt' | 'trends' | 'agentPerformance.agentAvatarUrl'> = {
       transcript: transcript,
-      languages: languagesResult.languages,
-      summary: summaryAndTopics.summary,
-      overallSentiment: summaryAndTopics.overallSentiment,
-      primaryCustomerIntent: intent.primaryCustomerIntent,
-      keyTopics: summaryAndTopics.topics,
-      sentimentTimeline: sentimentTimelineResult.timeline,
-      policyViolations: violationsResult.violationDetails.map(v => ({
-        ...v,
-        severity: v.severity as 'LOW' | 'MEDIUM' | 'HIGH',
-      })),
+      languages: analysisOutput.languages,
+      summary: analysisOutput.summary,
+      overallSentiment: analysisOutput.overallSentiment,
+      primaryCustomerIntent: analysisOutput.primaryCustomerIntent,
+      keyTopics: analysisOutput.keyTopics,
+      sentimentTimeline: analysisOutput.sentimentTimeline,
+      policyViolations: analysisOutput.policyViolations, // The structure already matches
       agentPerformance: {
-        agentName: agentName,
-        agentId: 'A-78910', // mock ID, can be improved
-        // agentAvatarUrl is now handled client-side
-        overallScore: agentCoaching.agentScore,
-        strengths: agentCoaching.strengths,
-        areasForImprovement: agentCoaching.areasForImprovement,
-        actionableCoachingPoints: agentCoaching.actionableCoachingPoints.map(p => ({
-          point: p.point,
-          reference: p.reference,
-        })),
+        agentName: agentName, // We still extract this manually for consistency
+        agentId: 'A-78910', // This can be improved to be dynamic later
+        overallScore: analysisOutput.agentPerformance.overallScore,
+        strengths: analysisOutput.agentPerformance.strengths,
+        areasForImprovement: analysisOutput.agentPerformance.areasForImprovement,
+        actionableCoachingPoints: analysisOutput.agentPerformance.actionableCoachingPoints,
       },
-      callOutcome: outcomeResult,
-      riskScore: riskScoreResult,
+      callOutcome: analysisOutput.callOutcome, // Structure matches
+      riskScore: analysisOutput.riskScore, // Structure matches
     };
 
     return NextResponse.json(result);
@@ -102,6 +62,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({error: 'Invalid request body', details: error.issues}, {status: 400});
     }
+    // Return the actual error message from the AI service or internal logic
     const errorMessage = error instanceof Error ? error.message : 'An unknown internal error occurred';
     return NextResponse.json({error: errorMessage}, {status: 500});
   }
