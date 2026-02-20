@@ -2,6 +2,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Allow read/write access to the 'conversations' collection for any authenticated user.
+    // This is a simple rule for getting started. For production, you would want to
+    // implement more granular, organization-based security rules.
+    match /conversations/{conversationId} {
+      allow read, write: if request.auth != null;
+    }
+
     /**
      * =====================================================================
      *                          DOCUMENTATION
@@ -187,8 +194,6 @@ service cloud.firestore {
      * @deny A non-member cannot access any data. A non-admin cannot write data.
      * @principle Establishes a standard organization-wide security posture: read for all members, write for admins.
      */
-    // FIX: Replaced `match ... where collection in [...]` with explicit match rules for each collection.
-    // The 'where' keyword is not supported directly after a match path segment in this way.
     match /organizations/{organizationId}/contextDocuments/{docId} {
       allow get: if canRead(organizationId);
       allow list: if canRead(organizationId);
@@ -274,8 +279,6 @@ service cloud.firestore {
      * @deny A non-member cannot access any data. A non-admin cannot write data.
      * @principle Inherits security posture from the parent organization, providing read for all members and write for admins.
      */
-    // FIX: Replaced `match ... where subcollection in [...]` with explicit match rules for each subcollection.
-    // The 'where' keyword is not supported directly after a match path segment in this way.
     match /organizations/{organizationId}/conversations/{conversationId}/analysisResult/sentimentTimeline/{docId} {
       allow get: if canRead(organizationId);
       allow list: if canRead(organizationId);

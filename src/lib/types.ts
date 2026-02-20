@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export type SentimentPoint = {
   segment: number;
   time: string;
@@ -15,7 +17,7 @@ export type PolicyViolation = {
 export type AgentPerformance = {
   agentName: string;
   agentId: string;
-  agentAvatarUrl: string;
+  agentAvatarUrl?: string; // Made optional, will be added on client
   overallScore: number;
   strengths: string[];
   areasForImprovement: string[];
@@ -43,6 +45,8 @@ export type RiskScore = {
 };
 
 export type AnalysisResult = {
+  id: string; // From Firestore document ID
+  createdAt: Timestamp; // From Firestore server timestamp
   transcript: string;
   languages: string[];
   summary: string;

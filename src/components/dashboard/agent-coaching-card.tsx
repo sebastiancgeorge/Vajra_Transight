@@ -36,7 +36,7 @@ export function AgentCoachingCard({ performance }: AgentCoachingCardProps) {
     <Card className="col-span-1 lg:col-span-2">
       <CardHeader className="flex flex-row items-center gap-4">
         <Avatar className="h-12 w-12">
-          <AvatarImage src={performance.agentAvatarUrl} alt={performance.agentName} data-ai-hint="professional portrait" />
+          {performance.agentAvatarUrl && <AvatarImage src={performance.agentAvatarUrl} alt={performance.agentName} data-ai-hint="professional portrait" />}
           <AvatarFallback>{nameInitials}</AvatarFallback>
         </Avatar>
         <div>

@@ -9,8 +9,7 @@ import { detectLanguages } from '@/ai/flows/detect-languages-flow';
 import { classifyCallOutcome } from '@/ai/flows/classify-call-outcome-flow';
 import { generateRiskScore } from '@/ai/flows/generate-risk-score-flow';
 import {policyDocuments} from '@/lib/policies';
-import type {AnalysisResult} from '@/lib/types';
-import {mockAnalysisResult} from '@/lib/mock-data'; // For trends and avatar
+import type { AnalysisResult } from '@/lib/types';
 
 const AnalyzeRequestSchema = z.object({
   transcript: z.string(),
@@ -66,7 +65,9 @@ export async function POST(req: NextRequest) {
 
     const agentCoaching = await generateAgentPerformanceCoaching(coachingInput);
 
-    const result: AnalysisResult = {
+    // The API now returns a raw analysis object.
+    // The client will be responsible for adding trends, avatar URLs, and saving to Firestore.
+    const result: Omit<AnalysisResult, 'id' | 'createdAt' | 'trends' | 'agentPerformance.agentAvatarUrl'> = {
       transcript: transcript,
       languages: languagesResult.languages,
       summary: summaryAndTopics.summary,
@@ -80,8 +81,8 @@ export async function POST(req: NextRequest) {
       })),
       agentPerformance: {
         agentName: agentName,
-        agentId: 'A-78910', // mock
-        agentAvatarUrl: mockAnalysisResult.agentPerformance.agentAvatarUrl, // mock
+        agentId: 'A-78910', // mock ID, can be improved
+        // agentAvatarUrl is now handled client-side
         overallScore: agentCoaching.agentScore,
         strengths: agentCoaching.strengths,
         areasForImprovement: agentCoaching.areasForImprovement,
@@ -92,7 +93,6 @@ export async function POST(req: NextRequest) {
       },
       callOutcome: outcomeResult,
       riskScore: riskScoreResult,
-      trends: mockAnalysisResult.trends, // mock
     };
 
     return NextResponse.json(result);
