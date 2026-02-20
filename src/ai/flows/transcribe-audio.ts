@@ -2,6 +2,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { AssemblyAI } from 'assemblyai';
 
 const TranscribeAudioInputSchema = z.object({
   audioDataUri: z.string().describe("Audio file as a data URI, including MIME type and Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
@@ -24,17 +25,60 @@ const transcribeAudioFlow = ai.defineFlow(
     outputSchema: TranscribeAudioOutputSchema,
   },
   async ({ audioDataUri }) => {
-    const { text } = await ai.generate({
-      model: 'gemini-1.5-flash',
-      prompt: [
-        { media: { url: audioDataUri } },
-        { text: 'You are an expert transcriptionist. Your task is to transcribe the audio provided. First, verify if the provided media is a valid audio or video file from which audio can be extracted. If it is not, or if the audio is silent or unintelligible, return an error message explaining the problem. Otherwise, transcribe the audio accurately. If there are multiple speakers, label them as "Speaker 1:", "Speaker 2:", etc.' },
-      ],
+    if (!process.env.ASSEMBLYAI_API_KEY || process.env.ASSEMBLYAI_API_KEY === 'your_assemblyai_api_key_here') {
+      console.warn("AssemblyAI API key not set. This is a mock transcript. Please add your API key to the .env file to enable audio transcription.");
+      return { transcript: `AssemblyAI API key not configured. This is a mock transcript.
+Customer: Hi, I'm having trouble with my new XT-5000 camera.
+Agent (Sarah): Hello, thank you for calling TechSupport.` };
+    }
+
+    const client = new AssemblyAI({
+      apiKey: process.env.ASSEMBLYAI_API_KEY,
     });
 
-    if (!text) {
-      throw new Error('Failed to get a valid transcript from the model.');
+    try {
+      const transcript = await client.transcripts.transcribe({
+        audio: audioDataUri,
+        speaker_labels: true,
+      });
+
+      if (transcript.status === 'error') {
+        throw new Error(`Transcription failed: ${transcript.error}`);
+      }
+
+      if (!transcript.text) {
+        throw new Error('Transcription resulted in no text.');
+      }
+
+      if (!transcript.utterances || transcript.utterances.length === 0) {
+        return { transcript: transcript.text };
+      }
+      
+      const speakers = [...new Set(transcript.utterances.map(u => u.speaker))].sort();
+
+      if (speakers.length === 1) {
+        return { transcript: transcript.utterances.map(u => `Customer: ${u.text}`).join('\n') };
+      }
+
+      const customerSpeaker = speakers[0];
+      const agentSpeaker = speakers[1];
+      
+      const formattedTranscript = transcript.utterances
+        .map(u => {
+            let speakerLabel = `Speaker ${u.speaker}`; // Fallback for >2 speakers
+            if (u.speaker === customerSpeaker) {
+                speakerLabel = 'Customer';
+            } else if (agentSpeaker && u.speaker === agentSpeaker) {
+                speakerLabel = 'Agent (Sarah)';
+            }
+            return `${speakerLabel}: ${u.text}`;
+        })
+        .join('\n');
+
+      return { transcript: formattedTranscript };
+    } catch (error: any) {
+      console.error('AssemblyAI transcription error:', error);
+      throw new Error(error.message || 'Failed to transcribe audio with AssemblyAI.');
     }
-    return { transcript: text };
   }
 );
