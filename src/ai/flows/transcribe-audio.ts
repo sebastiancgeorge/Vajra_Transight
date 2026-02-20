@@ -2,7 +2,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { AssemblyAI } from 'assemblyai';
+import { AssemblyAI, type Transcript, type TranscriptionConfig } from 'assemblyai';
 
 const TranscribeAudioInputSchema = z.object({
   audioDataUri: z.string().describe("Audio file as a data URI, including MIME type and Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
@@ -37,11 +37,17 @@ Agent (Sarah): Hello, thank you for calling TechSupport.` };
     });
 
     try {
-      const transcript = await client.transcripts.transcribe({
+      const config: TranscriptionConfig = {
         audio: audioDataUri,
         speaker_labels: true,
+        speakers_expected: 2,
+        sentiment_analysis: true,
+        language_detection: true,
+        summarization: true,
         speech_model: 'universal-2',
-      });
+      };
+      
+      const transcript: Transcript = await client.transcripts.transcribe(config);
 
       if (transcript.status === 'error') {
         throw new Error(`Transcription failed: ${transcript.error}`);
