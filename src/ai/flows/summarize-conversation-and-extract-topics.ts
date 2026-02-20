@@ -10,14 +10,15 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-const ConversationTranscriptSchema = z.object({
+const ConversationTranscriptInputSchema = z.object({
   transcript: z.string().describe('The full transcript of the customer conversation.'),
 });
-export type ConversationTranscriptInput = z.infer<typeof ConversationTranscriptSchema>;
+export type ConversationTranscriptInput = z.infer<typeof ConversationTranscriptInputSchema>;
 
 const ConversationAnalysisOutputSchema = z.object({
   summary: z.string().describe('A concise summary of the conversation.'),
   topics: z.array(z.string()).describe('An array of key topics discussed in the conversation.'),
+  overallSentiment: z.enum(['Positive', 'Neutral', 'Negative']).describe('The overall sentiment of the conversation (Positive, Neutral, or Negative).'),
 });
 export type ConversationAnalysisOutput = z.infer<typeof ConversationAnalysisOutputSchema>;
 
@@ -29,22 +30,23 @@ export async function summarizeConversationAndExtractTopics(
 
 const summarizeConversationPrompt = ai.definePrompt({
   name: 'summarizeConversationAndExtractTopicsPrompt',
-  input: { schema: ConversationTranscriptSchema },
+  input: { schema: ConversationTranscriptInputSchema },
   output: { schema: ConversationAnalysisOutputSchema },
-  prompt: `You are an expert assistant for a call center manager. Your task is to analyze a customer conversation transcript and provide a concise summary and a list of key topics discussed.
+  prompt: `You are an expert assistant for a call center manager. Your task is to analyze a customer conversation transcript and provide a concise summary, a list of key topics discussed, and the overall sentiment.
 
 Conversation Transcript:
 {{{transcript}}}
 
 Based on the transcript, provide:
 1. A concise summary of the conversation.
-2. A list of 3-5 key topics that were discussed.`,
+2. A list of 3-5 key topics that were discussed.
+3. The overall sentiment of the conversation (Positive, Neutral, or Negative).`,
 });
 
 const summarizeConversationAndExtractTopicsFlow = ai.defineFlow(
   {
     name: 'summarizeConversationAndExtractTopicsFlow',
-    inputSchema: ConversationTranscriptSchema,
+    inputSchema: ConversationTranscriptInputSchema,
     outputSchema: ConversationAnalysisOutputSchema,
   },
   async (input) => {

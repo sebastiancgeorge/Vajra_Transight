@@ -23,8 +23,8 @@ const IdentifyPrimaryCustomerIntentOutputSchema = z.object({
 export type IdentifyPrimaryCustomerIntentOutput = z.infer<typeof IdentifyPrimaryCustomerIntentOutputSchema>;
 
 export async function identifyPrimaryCustomerIntent(
-  input: IdentifyCustomerIntentInput
-): Promise<IdentifyCustomerIntentOutput> {
+  input: IdentifyPrimaryCustomerIntentInput
+): Promise<IdentifyPrimaryCustomerIntentOutput> {
   return identifyPrimaryCustomerIntentFlow(input);
 }
 
@@ -53,7 +53,7 @@ const identifyPrimaryCustomerIntentFlow = ai.defineFlow(
   {
     name: 'identifyPrimaryCustomerIntentFlow',
     inputSchema: IdentifyPrimaryCustomerIntentInputSchema,
-    outputSchema: IdentifyCustomerIntentOutputSchema,
+    outputSchema: IdentifyPrimaryCustomerIntentOutputSchema,
   },
   async (input) => {
     const { output } = await prompt(input);

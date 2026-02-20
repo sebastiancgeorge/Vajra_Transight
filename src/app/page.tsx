@@ -6,20 +6,44 @@ import { AppSidebar } from '@/components/layout/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { AnalysisForm } from '@/components/dashboard/analysis-form';
 import { AnalysisView } from '@/components/dashboard/analysis-view';
-import { mockAnalysisResult, mockTranscript } from '@/lib/mock-data';
+import { mockTranscript } from '@/lib/mock-data';
 import type { AnalysisResult } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardPage() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [isPending, startTransition] = useTransition();
   const [transcript, setTranscript] = useState<string>(mockTranscript);
+  const { toast } = useToast();
 
   const handleAnalyze = () => {
-    startTransition(() => {
+    startTransition(async () => {
       setAnalysisResult(null);
-      setTimeout(() => {
-        setAnalysisResult(mockAnalysisResult);
-      }, 1500); // Simulate API call delay
+      try {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ transcript }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        setAnalysisResult(result);
+      } catch (error) {
+        console.error('Failed to analyze:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Analysis Failed',
+          description: 'Could not analyze the transcript. Please try again.',
+        });
+        // Optionally, reset to a known state or show an error message in the view
+        setAnalysisResult(null);
+      }
     });
   };
 
