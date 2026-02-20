@@ -24,21 +24,17 @@ const transcribeAudioFlow = ai.defineFlow(
     outputSchema: TranscribeAudioOutputSchema,
   },
   async ({ audioDataUri }) => {
-    const { output } = await ai.generate({
-      model: 'googleai/gemini-2.5-flash',
+    const { text } = await ai.generate({
+      model: 'googleai/gemini-1.5-pro',
       prompt: [
         { media: { url: audioDataUri } },
         { text: 'You are an expert transcriptionist. Transcribe the following audio accurately. If there are multiple speakers, label them as "Speaker 1:", "Speaker 2:", etc.' },
       ],
-      output: {
-        schema: TranscribeAudioOutputSchema,
-        format: 'json',
-      },
     });
 
-    if (!output) {
+    if (!text) {
       throw new Error('Failed to get a valid transcript from the model.');
     }
-    return output;
+    return { transcript: text };
   }
 );
