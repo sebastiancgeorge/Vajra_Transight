@@ -70,6 +70,9 @@ export const mockAnalysisResult: AnalysisResult = {
         reference: 'Timestamp 1:15',
       },
     ],
+    talkToListenRatio: '35:65',
+    interruptionCount: 0,
+    sentimentTrend: 'Improving',
   },
   callOutcome: {
     outcome: 'Resolved',

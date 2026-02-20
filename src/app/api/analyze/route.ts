@@ -53,6 +53,9 @@ export async function POST(req: NextRequest) {
         strengths: analysisOutput.agentPerformance.strengths,
         areasForImprovement: analysisOutput.agentPerformance.areasForImprovement,
         actionableCoachingPoints: analysisOutput.agentPerformance.actionableCoachingPoints,
+        talkToListenRatio: analysisOutput.agentPerformance.talkToListenRatio,
+        interruptionCount: analysisOutput.agentPerformance.interruptionCount,
+        sentimentTrend: analysisOutput.agentPerformance.sentimentTrend,
       },
       callOutcome: analysisOutput.callOutcome, // Structure matches
       riskScore: analysisOutput.riskScore, // Structure matches

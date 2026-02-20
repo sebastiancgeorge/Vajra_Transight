@@ -17,6 +17,8 @@ import {
   Target,
   ThumbsUp,
   TrendingUp,
+  Headphones,
+  MicOff,
 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -47,7 +49,7 @@ export function AgentCoachingCard({ performance }: AgentCoachingCardProps) {
         </div>
       </CardHeader>
       <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="flex flex-col items-center justify-center space-y-2 rounded-lg border bg-card p-6">
+        <div className="flex flex-col items-center justify-start space-y-2 rounded-lg border bg-card p-4">
           <h3 className="text-lg font-medium">Overall Score</h3>
           <div className="relative h-32 w-32">
             <RadialBarChart
@@ -81,6 +83,42 @@ export function AgentCoachingCard({ performance }: AgentCoachingCardProps) {
               <span className="text-3xl font-bold font-headline text-primary">
                 {performance.overallScore}
               </span>
+            </div>
+          </div>
+          <div className="w-full space-y-3 pt-4">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Headphones className="h-4 w-4" />
+                <span>Talk/Listen Ratio</span>
+              </div>
+              <span className="font-semibold">{performance.talkToListenRatio}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <MicOff className="h-4 w-4" />
+                <span>Interruptions</span>
+              </div>
+              <span className="font-semibold">{performance.interruptionCount}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <TrendingUp className="h-4 w-4" />
+                <span>Sentiment Trend</span>
+              </div>
+              <Badge
+                variant={
+                  performance.sentimentTrend === 'Declining'
+                    ? 'destructive'
+                    : 'secondary'
+                }
+                className={
+                  performance.sentimentTrend === 'Improving'
+                    ? 'border-transparent bg-green-500 text-primary-foreground hover:bg-green-500/80'
+                    : ''
+                }
+              >
+                {performance.sentimentTrend}
+              </Badge>
             </div>
           </div>
         </div>

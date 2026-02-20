@@ -25,6 +25,9 @@ export type AgentPerformance = {
     point: string;
     reference?: string;
   }[];
+  talkToListenRatio: string; // e.g. "40:60"
+  interruptionCount: number;
+  sentimentTrend: 'Improving' | 'Declining' | 'Stable';
 };
 
 export type TrendData = {

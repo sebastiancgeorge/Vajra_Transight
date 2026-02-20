@@ -49,10 +49,13 @@ const AnalyzeConversationOutputSchema = z.object({
   sentimentTimeline: z.array(SentimentPointSchema).describe('An array of 5-7 sentiment points representing the conversation\'s emotional trajectory.'),
   policyViolations: z.array(PolicyViolationDetailSchema).describe('An array of any detected policy violations. Should be empty if no violations are found.'),
   agentPerformance: z.object({
-    overallScore: z.number().min(0).max(100).describe('A numerical score from 0 to 100 for the agent\'s performance.'),
-    strengths: z.array(z.string()).describe('Specific positive aspects of the agent\'s performance.'),
+    overallScore: z.number().min(0).max(100).describe("A numerical score from 0 to 100 for the agent's performance."),
+    strengths: z.array(z.string()).describe("Specific positive aspects of the agent's performance."),
     areasForImprovement: z.array(z.string()).describe('Specific areas where the agent can improve.'),
     actionableCoachingPoints: z.array(AgentCoachingPointSchema).describe('A list of concrete coaching points for the agent.'),
+    talkToListenRatio: z.string().describe('The agent-to-customer talk-to-listen ratio (e.g., "40:60").'),
+    interruptionCount: z.number().describe('The number of times the agent interrupted the customer.'),
+    sentimentTrend: z.enum(['Improving', 'Declining', 'Stable']).describe('The trend of sentiment throughout the conversation (Improving, Declining, or Stable).'),
   }),
   callOutcome: z.object({
     outcome: z.enum(['Resolved', 'Escalated', 'Dropped', 'Requires Follow-up', 'No Action Needed']).describe('The final classified outcome of the call.'),
@@ -90,7 +93,7 @@ Analyze the transcript for the following aspects:
 5.  **Key Topics**: Extract 3-5 main topics discussed.
 6.  **Sentiment Timeline**: Break the conversation into 5-7 chronological segments. For each, provide a sentiment score (-1.0 to 1.0), a timestamp, and a brief summary of that segment's text.
 7.  **Policy Violations**: Analyze the transcript against the provided policy documents. Identify any violations, detailing the policy, a description, the relevant excerpt, and severity (LOW, MEDIUM, HIGH). If none, this should be an empty array.
-8.  **Agent Performance**: Evaluate the agent's performance. Provide an overall score (0-100), a list of strengths, areas for improvement, and specific, actionable coaching points with references to the transcript if possible.
+8.  **Agent Performance**: Evaluate the agent's performance. Provide an overall score (0-100), a list of strengths, areas for improvement, and specific, actionable coaching points with references to the transcript if possible. Also include the agent-to-customer talk-to-listen ratio (e.g., "40:60"), the number of times the agent interrupted the customer, and whether the sentiment trend was "Improving", "Declining", or "Stable" based on the sentiment timeline.
 9.  **Call Outcome**: Classify the final outcome of the call (e.g., Resolved, Escalated) and provide a brief reason.
 10. **Risk Score**: Calculate a customer churn/escalation risk score (0-100) based on factors like frustration and issue resolution, and provide a brief justification.
 
