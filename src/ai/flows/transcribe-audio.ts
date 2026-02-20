@@ -41,11 +41,14 @@ Agent (Sarah): Hello, thank you for calling TechSupport.` };
         audio: audioDataUri,
         speaker_labels: true,
         speakers_expected: 2,
-        sentiment_analysis: true,
-        language_detection: true,
-        summarization: true,
-        speech_model: 'universal-2',
+        sentiment_analysis: false, // Disabled: Handled by the main analysis flow
+        language_detection: false, // Disabled: Handled by the main analysis flow
+        summarization: false,      // Disabled: Handled by the main analysis flow
       };
+      
+      // The AssemblyAI SDK type is missing `speech_models`, so we cast to `any` to add it.
+      // This is required by their API to route to the correct transcription model.
+      (config as any).speech_models = ['universal-2'];
       
       const transcript: Transcript = await client.transcripts.transcribe(config);
 
@@ -53,33 +56,14 @@ Agent (Sarah): Hello, thank you for calling TechSupport.` };
         throw new Error(`Transcription failed: ${transcript.error}`);
       }
 
-      if (!transcript.text) {
-        throw new Error('Transcription resulted in no text.');
-      }
-
-      if (!transcript.utterances || transcript.utterances.length === 0) {
-        return { transcript: transcript.text };
+      if (!transcript.text || !transcript.utterances || transcript.utterances.length === 0) {
+        return { transcript: transcript.text || 'Transcription produced no text.' };
       }
       
-      const speakers = [...new Set(transcript.utterances.map(u => u.speaker))].sort();
-
-      if (speakers.length === 1) {
-        return { transcript: transcript.utterances.map(u => `Customer: ${u.text}`).join('\n') };
-      }
-
-      const customerSpeaker = speakers[0];
-      const agentSpeaker = speakers[1];
-      
+      // Use the speaker labels directly from AssemblyAI (e.g., Speaker A, Speaker B)
+      // This is more robust than trying to guess who is the customer vs. agent.
       const formattedTranscript = transcript.utterances
-        .map(u => {
-            let speakerLabel = `Speaker ${u.speaker}`; // Fallback for >2 speakers
-            if (u.speaker === customerSpeaker) {
-                speakerLabel = 'Customer';
-            } else if (agentSpeaker && u.speaker === agentSpeaker) {
-                speakerLabel = 'Agent (Sarah)';
-            }
-            return `${speakerLabel}: ${u.text}`;
-        })
+        .map(u => `Speaker ${u.speaker}: ${u.text}`)
         .join('\n');
 
       return { transcript: formattedTranscript };
