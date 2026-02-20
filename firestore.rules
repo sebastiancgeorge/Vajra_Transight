@@ -1,0 +1,311 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * =====================================================================
+     *                          DOCUMENTATION
+     * =====================================================================
+     *
+     * Core Philosophy:
+     * This ruleset enforces a strict multi-tenant, organization-based data
+     * segregation model. All data is scoped to a specific organization, and a
+     * user's access is determined by their membership and role within that
+     * organization. Cross-organization data access is strictly forbidden.
+     *
+     * Data Structure:
+     * All application data is nested under the top-level collection
+     * `/organizations/{organizationId}`. This hierarchical structure is the
+     * primary mechanism for data isolation between different client tenants.
+     *
+     * Key Security Decisions:
+     * - Custom Claims for Authorization: To ensure performant and scalable
+     *   security checks, these rules depend on Firebase Authentication Custom
+     *   Claims. When a user authenticates, the backend must set the following
+     *   claims on their token:
+     *     - `orgId`: The ID of the organization the user belongs to.
+     *     - `role`: The user's role within that organization (e.g., 'admin',
+     *       'analyst').
+     *   This avoids slow and costly database reads in every rule evaluation.
+     * - Role-Based Access Control (RBAC): Access within an organization is
+     *   governed by roles. A simplified model is used:
+     *     - 'admin': Has full read/write access to all of their
+     *       organization's data.
+     *     - 'analyst', 'agent': Have read-only access to their organization's
+     *       data.
+     * - Default Deny: Access is implicitly denied. Rules only grant permissions
+     *   explicitly. Unauthorized operations are always rejected.
+     * - Backend-Managed Organizations: The top-level `/organizations`
+     *   collection is read-only for clients. Creating, updating, or deleting
+     *   organization documents is assumed to be a privileged backend operation.
+     *
+     * Denormalization for Authorization:
+     * Following best practices, every document within an organization's data
+     * tree contains a denormalized `organizationId` field. On create and
+     * update operations, rules validate that this field matches the ID in the
+     * document path, ensuring data integrity and preventing data from being
+     * associated with the wrong organization.
+     *
+     * Structural Segregation:
+     * The `/organizations/{organizationId}` path structure naturally enforces
+     * structural segregation, ensuring that data from different tenants is
+     * never mixed in the same collection path. This simplifies rules for list
+     * operations, as any query is inherently scoped to a single organization.
+     *
+     */
+
+    // =====================================================================
+    //                         HELPER FUNCTIONS
+    // =====================================================================
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the authenticated user's custom claim `orgId` matches the
+     * organization ID from the document path. This is the primary function for
+     * verifying a user's membership in an organization.
+     */
+    function isMemberOfOrg(orgId) {
+      return isSignedIn() && request.auth.token.orgId == orgId;
+    }
+
+    /**
+     * Checks if the user is an admin of the specified organization.
+     */
+    function isAdmin(orgId) {
+      return isMemberOfOrg(orgId) && request.auth.token.role == 'admin';
+    }
+
+    /**
+     * Determines if a user has read access to organization data.
+     * All authenticated members of the organization are granted read access.
+     */
+    function canRead(orgId) {
+      return isMemberOfOrg(orgId);
+    }
+
+    /**
+     * Determines if a user has write access to organization data.
+     * By default, only admins have write access.
+     */
+    function canWrite(orgId) {
+      return isAdmin(orgId);
+    }
+
+    /**
+     * Checks if the authenticated user's UID matches the given userId.
+     * Used to verify resource ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Validates that the `organizationId` field in a new document matches
+     * the organizationId from the path. Enforces relational integrity on create.
+     */
+    function isCreatingWithValidOrgId(orgId) {
+      return request.resource.data.organizationId == orgId;
+    }
+
+    /**
+     * Validates that the `organizationId` field is immutable on update.
+     * Prevents re-assigning a document to a different organization.
+     */
+    function isOrgIdImmutable() {
+      return request.resource.data.organizationId == resource.data.organizationId;
+    }
+
+    // =====================================================================
+    //                         COLLECTION RULES
+    // =====================================================================
+
+    /**
+     * @description Controls access to top-level Organization documents.
+     * @path /organizations/{organizationId}
+     * @allow (get) An authenticated user can read their own organization's document.
+     * @deny (create, update, delete) All client-side mutations are disallowed. Organization lifecycle is managed by the backend.
+     * @deny (list) Listing all organizations is disallowed for security.
+     * @principle Restricts top-level collection modifications to trusted backend processes.
+     */
+    match /organizations/{organizationId} {
+      allow get: if canRead(organizationId);
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Controls access to User profiles within an organization.
+     * @path /organizations/{organizationId}/users/{userId}
+     * @allow (create) An authenticated user can create their own user profile document.
+     * @allow (get, update) A user can get/update their own profile. An admin can get/update any profile in their organization.
+     * @allow (list, delete) Only admins can list or delete users within their organization.
+     * @deny A user cannot access another user's profile (unless they are an admin).
+     * @principle Enforces a combination of user self-service and administrative oversight.
+     */
+    match /organizations/{organizationId}/users/{userId} {
+      allow get: if isMemberOfOrg(organizationId) && (isAdmin(organizationId) || isOwner(userId));
+      allow list: if isAdmin(organizationId);
+      allow create: if isOwner(userId) && isCreatingWithValidOrgId(organizationId);
+      allow update: if resource != null && isMemberOfOrg(organizationId) && (isAdmin(organizationId) || isOwner(userId)) && isOrgIdImmutable();
+      allow delete: if resource != null && isAdmin(organizationId);
+    }
+
+    /**
+     * @description Secures the singleton configuration document for an organization.
+     * @path /organizations/{organizationId}/configuration/{docId}
+     * @allow (get) Any member of the organization can read the configuration.
+     * @allow (create, update, delete) Only admins of the organization can modify the configuration.
+     * @deny (list) Listing is not applicable as this path should only contain one document.
+     * @principle Provides read-only access for members and write access for administrators.
+     */
+    match /organizations/{organizationId}/configuration/{docId} {
+      allow get: if canRead(organizationId);
+      allow list: if false;
+      allow create: if canWrite(organizationId) && isCreatingWithValidOrgId(organizationId);
+      allow update: if resource != null && canWrite(organizationId) && isOrgIdImmutable();
+      allow delete: if resource != null && canWrite(organizationId);
+    }
+
+    /**
+     * @description Generic rule for organization-level read-only/admin-write collections.
+     * @path /organizations/{organizationId}/contextDocuments/{documentId}
+     * @path /organizations/{organizationId}/agents/{agentId}
+     * @path /organizations/{organizationId}/conversations/{conversationId}
+     * @path /organizations/{organizationId}/insights/{insightId}
+     * @path /organizations/{organizationId}/kpiDefinitions/{kpiDefinitionId}
+     * @path /organizations/{organizationId}/kpiValues/{kpiValueId}
+     * @allow (get, list) Any member of the organization can read data.
+     * @allow (create, update, delete) Only admins of the organization can write data.
+     * @deny A non-member cannot access any data. A non-admin cannot write data.
+     * @principle Establishes a standard organization-wide security posture: read for all members, write for admins.
+     */
+    // FIX: Replaced `match ... where collection in [...]` with explicit match rules for each collection.
+    // The 'where' keyword is not supported directly after a match path segment in this way.
+    match /organizations/{organizationId}/contextDocuments/{docId} {
+      allow get: if canRead(organizationId);
+      allow list: if canRead(organizationId);
+      allow create: if canWrite(organizationId) && isCreatingWithValidOrgId(organizationId);
+      allow update: if resource != null && canWrite(organizationId) && isOrgIdImmutable();
+      allow delete: if resource != null && canWrite(organizationId);
+    }
+    match /organizations/{organizationId}/agents/{docId} {
+      allow get: if canRead(organizationId);
+      allow list: if canRead(organizationId);
+      allow create: if canWrite(organizationId) && isCreatingWithValidOrgId(organizationId);
+      allow update: if resource != null && canWrite(organizationId) && isOrgIdImmutable();
+      allow delete: if resource != null && canWrite(organizationId);
+    }
+    match /organizations/{organizationId}/conversations/{docId} {
+      allow get: if canRead(organizationId);
+      allow list: if canRead(organizationId);
+      allow create: if canWrite(organizationId) && isCreatingWithValidOrgId(organizationId);
+      allow update: if resource != null && canWrite(organizationId) && isOrgIdImmutable();
+      allow delete: if resource != null && canWrite(organizationId);
+    }
+    match /organizations/{organizationId}/insights/{docId} {
+      allow get: if canRead(organizationId);
+      allow list: if canRead(organizationId);
+      allow create: if canWrite(organizationId) && isCreatingWithValidOrgId(organizationId);
+      allow update: if resource != null && canWrite(organizationId) && isOrgIdImmutable();
+      allow delete: if resource != null && canWrite(organizationId);
+    }
+    match /organizations/{organizationId}/kpiDefinitions/{docId} {
+      allow get: if canRead(organizationId);
+      allow list: if canRead(organizationId);
+      allow create: if canWrite(organizationId) && isCreatingWithValidOrgId(organizationId);
+      allow update: if resource != null && canWrite(organizationId) && isOrgIdImmutable();
+      allow delete: if resource != null && canWrite(organizationId);
+    }
+    match /organizations/{organizationId}/kpiValues/{docId} {
+      allow get: if canRead(organizationId);
+      allow list: if canRead(organizationId);
+      allow create: if canWrite(organizationId) && isCreatingWithValidOrgId(organizationId);
+      allow update: if resource != null && canWrite(organizationId) && isOrgIdImmutable();
+      allow delete: if resource != null && canWrite(organizationId);
+    }
+
+    /**
+     * @description Secures Report Definitions, which are user-owned within an organization.
+     * @path /organizations/{organizationId}/reportDefinitions/{reportDefinitionId}
+     * @allow (create) Any member of an organization can create a report definition for themselves.
+     * @allow (update, delete) The user who owns the report or an organization admin can modify or delete it.
+     * @allow (get, list) All members of the organization can read all report definitions.
+     * @deny A user cannot modify another user's report definition unless they are an admin.
+     * @principle Combines organization-wide read access with user-specific ownership for writes.
+     */
+    match /organizations/{organizationId}/reportDefinitions/{reportDefinitionId} {
+      allow get: if canRead(organizationId);
+      allow list: if canRead(organizationId);
+      allow create: if isMemberOfOrg(organizationId) && request.resource.data.userId == request.auth.uid && isCreatingWithValidOrgId(organizationId);
+      allow update: if resource != null && isMemberOfOrg(organizationId) && (isAdmin(organizationId) || isOwner(resource.data.userId)) && isOrgIdImmutable() && request.resource.data.userId == resource.data.userId;
+      allow delete: if resource != null && isMemberOfOrg(organizationId) && (isAdmin(organizationId) || isOwner(resource.data.userId));
+    }
+
+    /**
+     * @description Secures the singleton analysis result document for a conversation.
+     * @path /organizations/{organizationId}/conversations/{conversationId}/analysisResult/{docId}
+     * @allow (get) Any member of the organization can read the analysis result.
+     * @allow (create, update, delete) Only admins of the organization can modify the result.
+     * @deny (list) Listing is not applicable as this is a single-document path.
+     * @principle Provides read-only access for members and write access for administrators.
+     */
+    match /organizations/{organizationId}/conversations/{conversationId}/analysisResult/{docId} {
+      allow get: if canRead(organizationId);
+      allow list: if false;
+      allow create: if canWrite(organizationId);
+      allow update: if resource != null && canWrite(organizationId);
+      allow delete: if resource != null && canWrite(organizationId);
+    }
+
+    /**
+     * @description Secures nested subcollections of a conversation's analysis result.
+     * @path /organizations/{organizationId}/conversations/{conversationId}/analysisResult/sentimentTimeline/{entryId}
+     * @path /organizations/{organizationId}/conversations/{conversationId}/analysisResult/policyViolations/{violationId}
+     * @allow (get, list) Any member of the organization can read the data.
+     * @allow (create, update, delete) Only admins of the organization can write the data.
+     * @deny A non-member cannot access any data. A non-admin cannot write data.
+     * @principle Inherits security posture from the parent organization, providing read for all members and write for admins.
+     */
+    // FIX: Replaced `match ... where subcollection in [...]` with explicit match rules for each subcollection.
+    // The 'where' keyword is not supported directly after a match path segment in this way.
+    match /organizations/{organizationId}/conversations/{conversationId}/analysisResult/sentimentTimeline/{docId} {
+      allow get: if canRead(organizationId);
+      allow list: if canRead(organizationId);
+      allow create: if canWrite(organizationId);
+      allow update: if resource != null && canWrite(organizationId);
+      allow delete: if resource != null && canWrite(organizationId);
+    }
+    match /organizations/{organizationId}/conversations/{conversationId}/analysisResult/policyViolations/{docId} {
+      allow get: if canRead(organizationId);
+      allow list: if canRead(organizationId);
+      allow create: if canWrite(organizationId);
+      allow update: if resource != null && canWrite(organizationId);
+      allow delete: if resource != null && canWrite(organizationId);
+    }
+
+    /**
+     * @description Secures performance metrics for a specific agent.
+     * @path /organizations/{organizationId}/agents/{agentId}/performanceMetrics/{metricId}
+     * @allow (get, list) Any member of the organization can read agent performance metrics.
+     * @allow (create, update, delete) Only admins of the organization can write metrics.
+     * @deny A non-member cannot access any data. A non-admin cannot write data.
+     * @principle Provides organization-wide transparency for performance data, with write access restricted to admins.
+     */
+    match /organizations/{organizationId}/agents/{agentId}/performanceMetrics/{metricId} {
+      allow get: if canRead(organizationId);
+      allow list: if canRead(organizationId);
+      allow create: if canWrite(organizationId);
+      allow update: if resource != null && canWrite(organizationId);
+      allow delete: if resource != null && canWrite(organizationId);
+    }
+
+  }
+}

@@ -1,0 +1,1049 @@
+{
+  "entities": {
+    "Organization": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Organization",
+      "type": "object",
+      "description": "Represents a client organization using the Verity Insights platform. This is the top-level entity for B2B accounts.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Organization entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The official name of the organization."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the organization."
+        },
+        "contactEmail": {
+          "type": "string",
+          "description": "Primary contact email for the organization.",
+          "format": "email"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the organization record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the organization record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "contactEmail",
+        "createdAt"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user account within an Organization, having specific roles and access to the platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Reference to the Organization this user belongs to. (Relationship: Organization 1:N User)"
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address, used for identification (not for authentication system storage).",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the user."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user within the organization (e.g., 'admin', 'analyst', 'agent')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the user account was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "organizationId",
+        "email",
+        "firstName",
+        "lastName",
+        "role",
+        "createdAt"
+      ]
+    },
+    "OrganizationConfiguration": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "OrganizationConfiguration",
+      "type": "object",
+      "description": "Stores client-defined configurations, such as business domain, products, and policies, used for RAG-enhanced analysis.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the OrganizationConfiguration entity."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Reference to the Organization this configuration belongs to. (Relationship: Organization 1:1 OrganizationConfiguration)"
+        },
+        "businessDomainDescription": {
+          "type": "string",
+          "description": "A textual description of the organization's business domain to provide context for AI analysis."
+        },
+        "productCatalog": {
+          "type": "array",
+          "description": "A list of product names or identifiers relevant to the organization for contextual analysis.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "policyRulesContext": {
+          "type": "string",
+          "description": "Detailed text or JSON string representing the organization's policies and compliance rules for violation detection. This can be directly embedded or a reference to external context documents."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the configuration was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the configuration was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "organizationId",
+        "businessDomainDescription",
+        "createdAt"
+      ]
+    },
+    "ContextDocument": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ContextDocument",
+      "type": "object",
+      "description": "Represents a document or knowledge base entry used as part of the RAG system for contextualizing AI analysis.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ContextDocument entity."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Reference to the Organization this document belongs to. (Relationship: Organization 1:N ContextDocument)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title or name of the document."
+        },
+        "content": {
+          "type": "string",
+          "description": "The textual content of the document, used for RAG."
+        },
+        "source": {
+          "type": "string",
+          "description": "The origin of the document (e.g., 'internal-wiki', 'CRM-notes', 'uploaded-PDF')."
+        },
+        "documentType": {
+          "type": "string",
+          "description": "The type of content the document represents (e.g., 'policy', 'product_manual', 'support_guide')."
+        },
+        "uploadDate": {
+          "type": "string",
+          "description": "Timestamp when the document was uploaded or created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "organizationId",
+        "title",
+        "content",
+        "source",
+        "documentType",
+        "uploadDate"
+      ]
+    },
+    "Conversation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Conversation",
+      "type": "object",
+      "description": "Represents a single customer interaction (e.g., call, chat) that is processed for insights.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Conversation entity."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Reference to the Organization that owns this conversation. (Relationship: Organization 1:N Conversation)"
+        },
+        "agentId": {
+          "type": "string",
+          "description": "Reference to the Agent involved in this conversation, if applicable. (Relationship: Agent 1:N Conversation)"
+        },
+        "channel": {
+          "type": "string",
+          "description": "The communication channel of the conversation (e.g., 'phone', 'chat', 'email', 'meeting')."
+        },
+        "durationSeconds": {
+          "type": "number",
+          "description": "The duration of the conversation in seconds."
+        },
+        "startTime": {
+          "type": "string",
+          "description": "The start time of the conversation.",
+          "format": "date-time"
+        },
+        "sourceUrl": {
+          "type": "string",
+          "description": "URL to the original audio file or text transcript in cloud storage.",
+          "format": "uri"
+        },
+        "rawTextContent": {
+          "type": "string",
+          "description": "The full transcribed text content of the conversation. Could be a direct string or a URI to a larger text file."
+        },
+        "detectedLanguage": {
+          "type": "string",
+          "description": "The ISO 639-1 language code automatically detected for the conversation (e.g., 'en', 'es')."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current processing status of the conversation (e.g., 'pending', 'processing', 'completed', 'failed')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the conversation record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the conversation record was last updated.",
+          "format": "date-time"
+        },
+        "processedAt": {
+          "type": "string",
+          "description": "Timestamp when the conversation analysis was completed.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "organizationId",
+        "channel",
+        "startTime",
+        "rawTextContent",
+        "detectedLanguage",
+        "status",
+        "createdAt"
+      ]
+    },
+    "ConversationAnalysisResult": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ConversationAnalysisResult",
+      "type": "object",
+      "description": "Stores the consolidated results and key insights generated from the AI analysis of a Conversation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ConversationAnalysisResult entity."
+        },
+        "conversationId": {
+          "type": "string",
+          "description": "Reference to the Conversation this analysis result pertains to. (Relationship: Conversation 1:1 ConversationAnalysisResult)"
+        },
+        "summary": {
+          "type": "string",
+          "description": "A concise summary of the conversation generated by AI."
+        },
+        "overallSentiment": {
+          "type": "string",
+          "description": "The overall sentiment detected in the conversation (e.g., 'positive', 'neutral', 'negative', 'mixed')."
+        },
+        "primaryCustomerIntent": {
+          "type": "string",
+          "description": "The primary intent identified for the customer in the conversation."
+        },
+        "keyTopics": {
+          "type": "array",
+          "description": "A list of key topics discussed during the conversation.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "riskScore": {
+          "type": "number",
+          "description": "A calculated score indicating the level of potential risk detected in the conversation."
+        },
+        "processingEngineDetails": {
+          "type": "string",
+          "description": "Details about the AI engines and models used for processing (e.g., 'AssemblyAI, Gemini v1.5 Pro')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the analysis result was generated.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the analysis result was last updated."
+        }
+      },
+      "required": [
+        "id",
+        "conversationId",
+        "summary",
+        "overallSentiment",
+        "primaryCustomerIntent",
+        "keyTopics",
+        "createdAt"
+      ]
+    },
+    "SentimentTimelineEntry": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SentimentTimelineEntry",
+      "type": "object",
+      "description": "Represents a segment of a conversation with an associated sentiment and timestamp, forming a sentiment timeline.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the SentimentTimelineEntry entity."
+        },
+        "conversationAnalysisResultId": {
+          "type": "string",
+          "description": "Reference to the ConversationAnalysisResult this sentiment entry is part of. (Relationship: ConversationAnalysisResult 1:N SentimentTimelineEntry)"
+        },
+        "startTimeOffsetSeconds": {
+          "type": "number",
+          "description": "The start time offset in seconds from the beginning of the conversation for this sentiment segment."
+        },
+        "endTimeOffsetSeconds": {
+          "type": "number",
+          "description": "The end time offset in seconds from the beginning of the conversation for this sentiment segment."
+        },
+        "sentiment": {
+          "type": "string",
+          "description": "The sentiment detected for this specific conversation segment (e.g., 'positive', 'neutral', 'negative')."
+        },
+        "textSegment": {
+          "type": "string",
+          "description": "The exact text excerpt from the conversation corresponding to this sentiment entry."
+        }
+      },
+      "required": [
+        "id",
+        "conversationAnalysisResultId",
+        "startTimeOffsetSeconds",
+        "endTimeOffsetSeconds",
+        "sentiment",
+        "textSegment"
+      ]
+    },
+    "PolicyViolation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PolicyViolation",
+      "type": "object",
+      "description": "Details a specific compliance or policy violation detected within a conversation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the PolicyViolation entity."
+        },
+        "conversationAnalysisResultId": {
+          "type": "string",
+          "description": "Reference to the ConversationAnalysisResult where this violation was detected. (Relationship: ConversationAnalysisResult 1:N PolicyViolation)"
+        },
+        "policyName": {
+          "type": "string",
+          "description": "The name or identifier of the policy that was violated."
+        },
+        "violationType": {
+          "type": "string",
+          "description": "The category or type of violation (e.g., 'compliance', 'misinformation', 'tone')."
+        },
+        "detectedPhrase": {
+          "type": "string",
+          "description": "The specific phrase or segment of text that triggered the violation detection."
+        },
+        "timestampOffsetSeconds": {
+          "type": "number",
+          "description": "The time offset in seconds from the start of the conversation where the violation occurred."
+        },
+        "severity": {
+          "type": "string",
+          "description": "The severity level of the detected violation (e.g., 'low', 'medium', 'high', 'critical')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the policy violation and its context."
+        },
+        "isResolved": {
+          "type": "boolean",
+          "description": "Indicates whether this policy violation has been reviewed and resolved."
+        }
+      },
+      "required": [
+        "id",
+        "conversationAnalysisResultId",
+        "policyName",
+        "violationType",
+        "detectedPhrase",
+        "timestampOffsetSeconds",
+        "severity",
+        "description",
+        "isResolved"
+      ]
+    },
+    "Agent": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Agent",
+      "type": "object",
+      "description": "Represents a customer service agent or representative whose conversations are being analyzed.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Agent entity."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Reference to the Organization the agent belongs to. (Relationship: Organization 1:N Agent)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the agent."
+        },
+        "employeeId": {
+          "type": "string",
+          "description": "The internal employee ID of the agent, if applicable."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the agent for identification purposes (not for authentication system storage).",
+          "format": "email"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current employment status of the agent (e.g., 'active', 'inactive', 'on_leave')."
+        },
+        "hireDate": {
+          "type": "string",
+          "description": "The date when the agent was hired.",
+          "format": "date"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the agent record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the agent record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "organizationId",
+        "name",
+        "email",
+        "status",
+        "hireDate",
+        "createdAt"
+      ]
+    },
+    "AgentPerformanceMetric": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AgentPerformanceMetric",
+      "type": "object",
+      "description": "Stores a specific performance metric calculated for an agent within the context of a particular conversation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the AgentPerformanceMetric entity."
+        },
+        "conversationAnalysisResultId": {
+          "type": "string",
+          "description": "Reference to the ConversationAnalysisResult associated with this metric. (Relationship: ConversationAnalysisResult 1:N AgentPerformanceMetric)"
+        },
+        "agentId": {
+          "type": "string",
+          "description": "Reference to the Agent to whom this performance metric applies. (Relationship: Agent 1:N AgentPerformanceMetric)"
+        },
+        "metricType": {
+          "type": "string",
+          "description": "The type of performance metric (e.g., 'sentimentScore', 'talkTimePercentage', 'complianceAdherenceScore', 'firstCallResolution')."
+        },
+        "metricValue": {
+          "type": "number",
+          "description": "The numerical value of the performance metric."
+        },
+        "metricUnit": {
+          "type": "string",
+          "description": "The unit of measurement for the metric value (e.g., '%', 'score', 'seconds', 'boolean')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of what this specific performance metric represents."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when this metric was calculated and recorded.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "conversationAnalysisResultId",
+        "agentId",
+        "metricType",
+        "metricValue",
+        "metricUnit",
+        "description",
+        "createdAt"
+      ]
+    },
+    "Insight": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Insight",
+      "type": "object",
+      "description": "Represents a high-level, actionable insight or trend identified from multiple conversations.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Insight entity."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Reference to the Organization for which this insight was generated. (Relationship: Organization 1:N Insight)"
+        },
+        "title": {
+          "type": "string",
+          "description": "A concise title for the insight."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the insight, including its findings and context."
+        },
+        "insightType": {
+          "type": "string",
+          "description": "The category or type of insight (e.g., 'customer_churn_risk', 'product_feature_request', 'agent_coaching_opportunity')."
+        },
+        "impact": {
+          "type": "string",
+          "description": "Description of the potential business impact of this insight."
+        },
+        "recommendations": {
+          "type": "string",
+          "description": "Actionable recommendations derived from the insight."
+        },
+        "generatedDate": {
+          "type": "string",
+          "description": "Timestamp when the insight was generated.",
+          "format": "date-time"
+        },
+        "relatedConversationIds": {
+          "type": "array",
+          "description": "References to Conversations that contributed to the generation of this insight. (Relationship: Insight N:N Conversation)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "organizationId",
+        "title",
+        "description",
+        "insightType",
+        "generatedDate"
+      ]
+    },
+    "ReportDefinition": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ReportDefinition",
+      "type": "object",
+      "description": "Defines the configuration for a customizable report or dashboard view for an organization or user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ReportDefinition entity."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Reference to the Organization this report definition belongs to. (Relationship: Organization 1:N ReportDefinition)"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who created or owns this report definition. (Relationship: User 1:N ReportDefinition)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the report definition."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the report's purpose or content."
+        },
+        "reportType": {
+          "type": "string",
+          "description": "The type or category of the report (e.g., 'daily_summary', 'weekly_trends', 'agent_performance')."
+        },
+        "configurationJson": {
+          "type": "string",
+          "description": "A JSON string containing the detailed configuration for the report, including filters, metrics, and visualization settings."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the report definition was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the report definition was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "organizationId",
+        "userId",
+        "name",
+        "reportType",
+        "configurationJson",
+        "createdAt"
+      ]
+    },
+    "KPIDefinition": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "KPIDefinition",
+      "type": "object",
+      "description": "Defines a Key Performance Indicator (KPI), including its name, calculation formula, and target values.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the KPIDefinition entity."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Reference to the Organization for which this KPI is defined. (Relationship: Organization 1:N KPIDefinition)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The display name of the KPI (e.g., 'Average Sentiment Score', 'Policy Adherence Rate')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the KPI, explaining what it measures and why it's important."
+        },
+        "metricFormula": {
+          "type": "string",
+          "description": "A string representing the calculation logic or formula for the KPI (e.g., 'AVG(sentimentScore)', 'COUNT(policyViolations)')."
+        },
+        "unit": {
+          "type": "string",
+          "description": "The unit of measurement for the KPI value (e.g., '%', 'count', 'score', '$')."
+        },
+        "targetValue": {
+          "type": "number",
+          "description": "The target numerical value for this KPI, if applicable."
+        },
+        "targetDirection": {
+          "type": "string",
+          "description": "Indicates whether a higher or lower value is better for meeting the target (e.g., 'higher_is_better', 'lower_is_better', 'closer_to_target')."
+        },
+        "category": {
+          "type": "string",
+          "description": "A category for the KPI (e.g., 'customer_experience', 'agent_efficiency', 'compliance', 'sales')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the KPI definition was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the KPI definition was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "organizationId",
+        "name",
+        "description",
+        "metricFormula",
+        "unit",
+        "category",
+        "createdAt"
+      ]
+    },
+    "KPIValue": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "KPIValue",
+      "type": "object",
+      "description": "Stores a calculated or recorded value of a specific KPI at a given timestamp or for a period, potentially across various dimensions.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the KPIValue entity."
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "Reference to the Organization this KPI value belongs to. (Relationship: Organization 1:N KPIValue)"
+        },
+        "kpiDefinitionId": {
+          "type": "string",
+          "description": "Reference to the KPIDefinition that this value represents. (Relationship: KPIDefinition 1:N KPIValue)"
+        },
+        "value": {
+          "type": "number",
+          "description": "The numerical value of the KPI."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The exact timestamp when this KPI value was calculated or recorded.",
+          "format": "date-time"
+        },
+        "periodStart": {
+          "type": "string",
+          "description": "The start time of the period over which the KPI was calculated, if applicable.",
+          "format": "date-time"
+        },
+        "periodEnd": {
+          "type": "string",
+          "description": "The end time of the period over which the KPI was calculated, if applicable.",
+          "format": "date-time"
+        },
+        "dimensions": {
+          "type": "string",
+          "description": "A JSON string containing key-value pairs representing the dimensions or breakdowns for this KPI value (e.g., {'agentId': 'agent123', 'productCategory': 'Electronics'})."
+        }
+      },
+      "required": [
+        "id",
+        "organizationId",
+        "kpiDefinitionId",
+        "value",
+        "timestamp"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/organizations/{organizationId}",
+        "definition": {
+          "entityName": "Organization",
+          "schema": {
+            "$ref": "#/backend/entities/Organization"
+          },
+          "description": "Top-level collection for client organizations. Document IDs correspond to the 'id' field of the Organization entity.",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "Unique identifier for the Organization."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organizations/{organizationId}/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles for a specific organization. Document IDs correspond to the Firebase Authentication UID. Includes 'organizationId' for direct authorization checks.",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "The unique identifier of the Organization this user belongs to."
+            },
+            {
+              "name": "userId",
+              "description": "The unique identifier of the User (Firebase Auth UID)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organizations/{organizationId}/configuration",
+        "definition": {
+          "entityName": "OrganizationConfiguration",
+          "schema": {
+            "$ref": "#/backend/entities/OrganizationConfiguration"
+          },
+          "description": "Stores client-specific configurations for a given organization as a single document (fixed ID 'configuration'). Includes denormalized 'organizationId' for authorization independence.",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "The unique identifier of the Organization this configuration belongs to."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organizations/{organizationId}/contextDocuments/{documentId}",
+        "definition": {
+          "entityName": "ContextDocument",
+          "schema": {
+            "$ref": "#/backend/entities/ContextDocument"
+          },
+          "description": "Collection of context documents for RAG. Includes denormalized 'organizationId' for authorization independence.",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "The unique identifier of the Organization this document belongs to."
+            },
+            {
+              "name": "documentId",
+              "description": "Unique identifier for the ContextDocument."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organizations/{organizationId}/agents/{agentId}",
+        "definition": {
+          "entityName": "Agent",
+          "schema": {
+            "$ref": "#/backend/entities/Agent"
+          },
+          "description": "Collection of customer service agents within an organization. Includes denormalized 'organizationId' for authorization independence.",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "The unique identifier of the Organization this agent belongs to."
+            },
+            {
+              "name": "agentId",
+              "description": "Unique identifier for the Agent."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organizations/{organizationId}/conversations/{conversationId}",
+        "definition": {
+          "entityName": "Conversation",
+          "schema": {
+            "$ref": "#/backend/entities/Conversation"
+          },
+          "description": "Collection of customer conversations processed by the system. Includes denormalized 'organizationId' and 'agentId' for authorization independence and direct filtering.",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "The unique identifier of the Organization that owns this conversation."
+            },
+            {
+              "name": "conversationId",
+              "description": "Unique identifier for the Conversation."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organizations/{organizationId}/conversations/{conversationId}/analysisResult",
+        "definition": {
+          "entityName": "ConversationAnalysisResult",
+          "schema": {
+            "$ref": "#/backend/entities/ConversationAnalysisResult"
+          },
+          "description": "Stores the AI analysis result for a specific conversation as a single document (fixed ID 'analysisResult'). Includes denormalized 'organizationId' and 'conversationId' for authorization independence.",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "The unique identifier of the Organization associated with the conversation."
+            },
+            {
+              "name": "conversationId",
+              "description": "The unique identifier of the Conversation this analysis result pertains to."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organizations/{organizationId}/conversations/{conversationId}/analysisResult/sentimentTimeline/{entryId}",
+        "definition": {
+          "entityName": "SentimentTimelineEntry",
+          "schema": {
+            "$ref": "#/backend/entities/SentimentTimelineEntry"
+          },
+          "description": "Subcollection of sentiment entries for a conversation's analysis result. Includes denormalized 'organizationId', 'conversationId', and 'conversationAnalysisResultId' for authorization independence.",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "The unique identifier of the Organization associated with the conversation."
+            },
+            {
+              "name": "conversationId",
+              "description": "The unique identifier of the Conversation this sentiment entry relates to."
+            },
+            {
+              "name": "entryId",
+              "description": "Unique identifier for the SentimentTimelineEntry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organizations/{organizationId}/conversations/{conversationId}/analysisResult/policyViolations/{violationId}",
+        "definition": {
+          "entityName": "PolicyViolation",
+          "schema": {
+            "$ref": "#/backend/entities/PolicyViolation"
+          },
+          "description": "Subcollection of policy violations detected in a conversation's analysis result. Includes denormalized 'organizationId', 'conversationId', and 'conversationAnalysisResultId' for authorization independence.",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "The unique identifier of the Organization associated with the conversation."
+            },
+            {
+              "name": "conversationId",
+              "description": "The unique identifier of the Conversation where this violation was detected."
+            },
+            {
+              "name": "violationId",
+              "description": "Unique identifier for the PolicyViolation."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organizations/{organizationId}/agents/{agentId}/performanceMetrics/{metricId}",
+        "definition": {
+          "entityName": "AgentPerformanceMetric",
+          "schema": {
+            "$ref": "#/backend/entities/AgentPerformanceMetric"
+          },
+          "description": "Subcollection of performance metrics for an agent. Includes denormalized 'organizationId', 'agentId', and 'conversationAnalysisResultId' for authorization independence and direct filtering.",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "The unique identifier of the Organization this metric belongs to."
+            },
+            {
+              "name": "agentId",
+              "description": "The unique identifier of the Agent to whom this metric applies."
+            },
+            {
+              "name": "metricId",
+              "description": "Unique identifier for the AgentPerformanceMetric."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organizations/{organizationId}/insights/{insightId}",
+        "definition": {
+          "entityName": "Insight",
+          "schema": {
+            "$ref": "#/backend/entities/Insight"
+          },
+          "description": "Collection of high-level actionable insights identified for an organization. Includes denormalized 'organizationId' for authorization independence.",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "The unique identifier of the Organization for which this insight was generated."
+            },
+            {
+              "name": "insightId",
+              "description": "Unique identifier for the Insight."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organizations/{organizationId}/reportDefinitions/{reportDefinitionId}",
+        "definition": {
+          "entityName": "ReportDefinition",
+          "schema": {
+            "$ref": "#/backend/entities/ReportDefinition"
+          },
+          "description": "Collection of customizable report definitions. Includes denormalized 'organizationId' and 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "The unique identifier of the Organization this report definition belongs to."
+            },
+            {
+              "name": "reportDefinitionId",
+              "description": "Unique identifier for the ReportDefinition."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organizations/{organizationId}/kpiDefinitions/{kpiDefinitionId}",
+        "definition": {
+          "entityName": "KPIDefinition",
+          "schema": {
+            "$ref": "#/backend/entities/KPIDefinition"
+          },
+          "description": "Collection defining Key Performance Indicators for an organization. Includes denormalized 'organizationId' for authorization independence.",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "The unique identifier of the Organization for which this KPI is defined."
+            },
+            {
+              "name": "kpiDefinitionId",
+              "description": "Unique identifier for the KPIDefinition."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/organizations/{organizationId}/kpiValues/{kpiValueId}",
+        "definition": {
+          "entityName": "KPIValue",
+          "schema": {
+            "$ref": "#/backend/entities/KPIValue"
+          },
+          "description": "Collection storing calculated KPI values. Includes denormalized 'organizationId' and 'kpiDefinitionId' for authorization independence and direct querying.",
+          "params": [
+            {
+              "name": "organizationId",
+              "description": "The unique identifier of the Organization this KPI value belongs to."
+            },
+            {
+              "name": "kpiValueId",
+              "description": "Unique identifier for the KPIValue."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure for Verity Insights is designed to prioritize security, scalability, and debuggability, adhering strictly to the core design principles. The primary strategy employed is a hierarchical, organization-scoped data model, where almost all application data resides under a specific organization's path. This inherently segregates client data and simplifies access control.\n\n**Authorization Independence (CRITICAL):** Authorization independence is achieved through extensive denormalization. Every document that requires organization-level access control explicitly includes an `organizationId` field. For nested entities, such as `ConversationAnalysisResult`, `SentimentTimelineEntry`, `PolicyViolation`, and `AgentPerformanceMetric`, their parent IDs (`conversationId`, `conversationAnalysisResultId`, `agentId`) along with the `organizationId` are denormalized directly into their respective documents. This eliminates the need for `get()` calls in Firestore security rules to check parent document permissions, enabling atomic operations and greatly simplifying rule logic. For example, to check if a user can access a `SentimentTimelineEntry`, the rule only needs to verify that the `request.auth.uid`'s associated `organizationId` matches the `organizationId` denormalized within the `SentimentTimelineEntry` document itself.\n\n**QAPs (Query As You Pay) / Secure List Operations:** The denormalization strategy directly supports secure `list` operations. By ensuring every document contains the `organizationId`, security rules can enforce that `list` queries must include a filter on `organizationId` (e.g., `resource.data.organizationId == request.auth.token.organizationId`). This prevents unauthorized retrieval of data, as the rule can reject any query that doesn't explicitly filter by the authorized organization, thereby making rules act as robust validators rather than filters applied after data retrieval.\n\n**Structural Segregation (Homogeneous Security Posture):** All data related to a single client organization is logically grouped under `/organizations/{organizationId}/...`. This ensures that all documents within a given subcollection (e.g., `/organizations/{organizationId}/conversations`) share a homogeneous security posture, requiring the same `organizationId` check. This prevents mixing data with different access requirements in the same collection, making security rules concise and predictable.\n\n**Access Modeling (DBAC):** User roles (`admin`, `analyst`, `agent`) are stored directly within the `/organizations/{organizationId}/users/{userId}` documents. Authorization rules will retrieve the `request.auth.uid`'s corresponding `User` document to ascertain their `organizationId` and `role`, then apply permissions based on these attributes to all other documents within that specific organization's scope. This approach adheres to the DBAC principle by storing roles in the database rather than relying on custom claims.\n\n**Data Clarity and Predictability:** The chosen paths are semantically clear and follow consistent naming conventions (e.g., `{organizationId}`, `{conversationId}`). Relationships are explicitly reflected in the path hierarchy where appropriate, and denormalized fields are clearly defined. Using single-document subcollections for 1:1 relationships (e.g., `/organizations/{organizationId}/configuration`, `/organizations/{organizationId}/conversations/{conversationId}/analysisResult`) helps enforce cardinality and simplifies retrieval."
+  }
+}
