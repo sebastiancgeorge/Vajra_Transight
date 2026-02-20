@@ -22,7 +22,7 @@ import { collection, serverTimestamp, query, orderBy } from 'firebase/firestore'
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { History } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { HistoryItem } from '@/components/dashboard/history-item';
 
 export default function DashboardPage() {
   const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisResult | null>(null);
@@ -145,19 +145,12 @@ export default function DashboardPage() {
                   <div className="p-2 space-y-1">
                       {isHistoryLoading && <p className="p-2 text-sm text-muted-foreground">Loading history...</p>}
                       {analysisHistory && analysisHistory.map((item) => (
-                        <Button
+                        <HistoryItem
                             key={item.id}
-                            variant={selectedAnalysis?.id === item.id ? "secondary" : "ghost"}
-                            className="w-full justify-start h-auto py-2 px-3 text-left"
+                            item={item}
+                            isSelected={selectedAnalysis?.id === item.id}
                             onClick={() => setSelectedAnalysis(item)}
-                        >
-                            <div>
-                                <p className="font-semibold text-sm truncate">{item.summary}</p>
-                                <p className="text-xs text-muted-foreground">
-                                    {item.createdAt?.toDate ? formatDistanceToNow(item.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
-                                </p>
-                            </div>
-                        </Button>
+                        />
                       ))}
                   </div>
               </ScrollArea>
