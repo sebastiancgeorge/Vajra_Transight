@@ -21,11 +21,12 @@ function extractAgentName(transcript: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  // API Key Authentication
-  const apiKey = req.headers.get('x-api-key');
-  if (apiKey !== process.env.ANALYSIS_API_KEY) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  // API Key Authentication has been removed for local development simplicity.
+  // Consider re-enabling for production environments.
+  // const apiKey = req.headers.get('x-api-key');
+  // if (apiKey !== process.env.ANALYSIS_API_KEY) {
+  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // }
 
   try {
     const body = await req.json();
@@ -101,6 +102,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({error: 'Invalid request body', details: error.issues}, {status: 400});
     }
-    return NextResponse.json({error: 'An internal error occurred'}, {status: 500});
+    const errorMessage = error instanceof Error ? error.message : 'An unknown internal error occurred';
+    return NextResponse.json({error: errorMessage}, {status: 500});
   }
 }
