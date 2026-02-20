@@ -1,7 +1,7 @@
 import {NextRequest, NextResponse} from 'next/server';
 import {z} from 'zod';
 import { analyzeConversation } from '@/ai/flows/analyze-conversation';
-import {policyDocuments} from '@/lib/policies';
+import { organizationConfig } from '@/lib/organization';
 import type { AnalysisResult } from '@/lib/types';
 
 const AnalyzeRequestSchema = z.object({
@@ -30,7 +30,9 @@ export async function POST(req: NextRequest) {
     // Call the single, consolidated analysis flow
     const analysisOutput = await analyzeConversation({
       transcript,
-      policyDocuments,
+      businessDomain: organizationConfig.businessDomain,
+      products: organizationConfig.products,
+      policyDocuments: organizationConfig.policies,
     });
 
     // The AI now returns the complete analysis. We just need to structure it

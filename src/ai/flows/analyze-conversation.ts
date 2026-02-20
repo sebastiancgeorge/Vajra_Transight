@@ -14,6 +14,8 @@ import {z} from 'genkit';
 // Input Schema
 const AnalyzeConversationInputSchema = z.object({
   transcript: z.string().describe('The full transcript of the customer conversation, including speaker labels like "Customer:" and "Agent (Name):".'),
+  businessDomain: z.string().optional().describe("The business domain of the company (e.g., 'banking', 'telecom'). This provides context for the analysis."),
+  products: z.array(z.string()).optional().describe("A list of the company's products or services to help identify product-related discussions."),
   policyDocuments: z.array(z.string()).describe('An array of policy documents to check for compliance violations.'),
 });
 export type AnalyzeConversationInput = z.infer<typeof AnalyzeConversationInputSchema>;
@@ -94,6 +96,17 @@ Analyze the transcript for the following aspects:
 
 You MUST extract the Agent's name from the transcript (e.g., from "Agent (Name):") to use in your analysis.
 
+---
+**Context for Analysis:**
+{{#if businessDomain}}
+- **Business Domain:** {{{businessDomain}}}
+{{/if}}
+{{#if products.length}}
+- **Products/Services:**
+  {{#each products}}
+  - {{{this}}}
+  {{/each}}
+{{/if}}
 ---
 **Policy Documents to Enforce:**
 {{#each policyDocuments}}

@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { policyDocuments as initialPolicies } from '@/lib/policies';
+import { organizationConfig } from '@/lib/organization';
 import { Trash2, Plus, Edit, Save, X } from 'lucide-react';
 
 export function PolicyEditor() {
-  const [policies, setPolicies] = useState<string[]>(initialPolicies);
+  const [policies, setPolicies] = useState<string[]>(organizationConfig.policies);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editText, setEditText] = useState('');
   const [newPolicyText, setNewPolicyText] = useState('');

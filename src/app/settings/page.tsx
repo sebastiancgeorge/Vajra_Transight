@@ -4,9 +4,9 @@ import { AppHeader } from '@/components/layout/app-header';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { PolicyEditor } from '@/components/settings/policy-editor';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FileText, SlidersHorizontal } from 'lucide-react';
+import { ConfigurationViewer } from '@/components/settings/configuration-viewer';
 
 
 export default function SettingsPage() {
@@ -26,15 +26,7 @@ export default function SettingsPage() {
               <PolicyEditor />
             </TabsContent>
             <TabsContent value="configurations" className="mt-4">
-               <Card>
-                <CardHeader>
-                    <CardTitle>System Configurations</CardTitle>
-                    <CardDescription>General settings for the application.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground">Configuration options will be available here in a future update.</p>
-                </CardContent>
-               </Card>
+               <ConfigurationViewer />
             </TabsContent>
           </Tabs>
         </main>
