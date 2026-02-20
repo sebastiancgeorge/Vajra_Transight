@@ -51,6 +51,7 @@ const generateAgentPerformanceCoachingPrompt = ai.definePrompt({
   output: { schema: GenerateAgentPerformanceCoachingOutputSchema },
   prompt: `You are an expert quality assurance specialist tasked with evaluating call center agent performance.
 Your goal is to provide specific, actionable coaching insights based on the provided conversation transcript, sentiment analysis, key topics, and relevant company policies.
+The transcript may contain multiple speakers, identified by 'Speaker (Name):'.
 
 Agent Name: {{{agentName}}}
 Overall Conversation Sentiment: {{{overallSentiment}}}

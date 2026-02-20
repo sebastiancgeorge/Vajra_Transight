@@ -33,6 +33,7 @@ const prompt = ai.definePrompt({
   input: { schema: IdentifyPrimaryCustomerIntentInputSchema },
   output: { schema: IdentifyPrimaryCustomerIntentOutputSchema },
   prompt: `Given the following customer conversation transcript, identify and classify the primary intent of the customer. Your response should be a concise classification.
+The transcript may contain multiple speakers, identified by 'Speaker (Name):'.
 
 Here are some examples of classifications:
 - 'Technical Support'

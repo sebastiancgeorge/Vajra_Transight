@@ -9,7 +9,8 @@ import { PolicyViolationsCard } from './policy-violations-card';
 import { SentimentTimelineCard } from './sentiment-timeline-card';
 import { SummaryCard } from './summary-card';
 import { TrendsCard } from './trends-card';
-import { Languages, Smile, FileQuestion, BarChart3, AlertTriangle, FileJson, Bot } from 'lucide-react';
+import { RiskScoreCard } from './risk-score-card';
+import { Languages, Smile, FileQuestion, BarChart3, AlertTriangle, FileJson, Bot, CheckCircle } from 'lucide-react';
 
 interface AnalysisViewProps {
   analysisResult: AnalysisResult | null;
@@ -30,12 +31,13 @@ const SkeletonCard = () => (
 export function AnalysisView({ analysisResult, isPending }: AnalysisViewProps) {
   if (isPending) {
     return (
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+        <SkeletonCard />
         <SkeletonCard />
         <SkeletonCard />
         <SkeletonCard />
         <div className="lg:col-span-2"><SkeletonCard /></div>
-        <SkeletonCard />
+        <div className="lg:col-span-2"><SkeletonCard /></div>
       </div>
     );
   }
@@ -53,8 +55,8 @@ export function AnalysisView({ analysisResult, isPending }: AnalysisViewProps) {
   }
 
   return (
-    <div className="grid auto-rows-max grid-cols-1 gap-6 lg:grid-cols-3">
-      <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid auto-rows-max grid-cols-1 gap-6 lg:grid-cols-4">
+      <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <OverviewCard
           title="Overall Sentiment"
           value={analysisResult.overallSentiment}
@@ -66,8 +68,13 @@ export function AnalysisView({ analysisResult, isPending }: AnalysisViewProps) {
           icon={FileQuestion}
         />
         <OverviewCard
-          title="Language"
-          value={analysisResult.language}
+          title="Call Outcome"
+          value={analysisResult.callOutcome.outcome}
+          icon={CheckCircle}
+        />
+        <OverviewCard
+          title="Language(s)"
+          value={analysisResult.languages}
           icon={Languages}
         />
       </div>
@@ -80,6 +87,7 @@ export function AnalysisView({ analysisResult, isPending }: AnalysisViewProps) {
         timeline={analysisResult.sentimentTimeline}
       />
       <TrendsCard trends={analysisResult.trends} />
+      <RiskScoreCard riskScore={analysisResult.riskScore} />
       <PolicyViolationsCard violations={analysisResult.policyViolations} />
       <AgentCoachingCard performance={analysisResult.agentPerformance} />
       <JsonOutput data={analysisResult} />

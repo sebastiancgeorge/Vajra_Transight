@@ -49,7 +49,7 @@ const detectCompliancePolicyViolationsPrompt = ai.definePrompt({
   output: {schema: DetectCompliancePolicyViolationsOutputSchema},
   prompt: `You are an expert compliance officer tasked with reviewing customer conversations for adherence to company policies and regulatory requirements.
 
-Your goal is to identify any instances where the conversation transcript violates the provided policy documents.
+Your goal is to identify any instances where the conversation transcript violates the provided policy documents. The transcript may contain multiple speakers, identified by 'Speaker (Name):'.
 
 Analyze the following conversation transcript against the given policy documents. If any violations are found, detail each violation clearly, specifying the policy violated, a description of how it was violated, a relevant excerpt from the conversation, and its severity (LOW, MEDIUM, HIGH).
 If no violations are detected, set 'violationsDetected' to false and provide an empty array for 'violationDetails'.

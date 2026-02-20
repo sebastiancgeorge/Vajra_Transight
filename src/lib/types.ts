@@ -32,9 +32,19 @@ export type TrendData = {
   }[];
 };
 
+export type CallOutcome = {
+  outcome: 'Resolved' | 'Escalated' | 'Dropped' | 'Requires Follow-up' | 'No Action Needed' | string;
+  reason: string;
+};
+
+export type RiskScore = {
+  score: number; // 0-100
+  reason: string;
+};
+
 export type AnalysisResult = {
   transcript: string;
-  language: string;
+  languages: string[];
   summary: string;
   overallSentiment: 'Positive' | 'Neutral' | 'Negative' | string;
   primaryCustomerIntent: string;
@@ -43,4 +53,6 @@ export type AnalysisResult = {
   policyViolations: PolicyViolation[];
   agentPerformance: AgentPerformance;
   trends: TrendData;
+  callOutcome: CallOutcome;
+  riskScore: RiskScore;
 };

@@ -26,7 +26,7 @@ Agent (Sarah): You're very welcome! We want you to enjoy your camera. Have a gre
 
 export const mockAnalysisResult: AnalysisResult = {
   transcript: mockTranscript,
-  language: 'English (US)',
+  languages: ['English (US)'],
   summary: 'The customer reported a severe battery drain issue with their recently purchased XT-5000 camera. The agent, Sarah, identified the problem as part of a known faulty batch, and efficiently processed a replacement unit with an additional complimentary battery, leading to high customer satisfaction.',
   overallSentiment: 'Positive',
   primaryCustomerIntent: 'Technical Support',
@@ -70,6 +70,14 @@ export const mockAnalysisResult: AnalysisResult = {
         reference: 'Timestamp 1:15',
       },
     ],
+  },
+  callOutcome: {
+    outcome: 'Resolved',
+    reason: 'Agent provided a satisfactory resolution by ordering a replacement camera and an extra battery.'
+  },
+  riskScore: {
+    score: 15,
+    reason: 'Initial customer frustration was high, but the agent\'s effective de-escalation and resolution significantly lowered the risk of churn.'
   },
   trends: {
     topIssues: [

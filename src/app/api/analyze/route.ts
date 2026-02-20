@@ -5,6 +5,9 @@ import {identifyPrimaryCustomerIntent} from '@/ai/flows/identify-primary-custome
 import {analyzeSentimentTimeline} from '@/ai/flows/analyze-sentiment-timeline';
 import {detectCompliancePolicyViolations} from '@/ai/flows/detect-compliance-policy-violations-flow';
 import {generateAgentPerformanceCoaching} from '@/ai/flows/generate-agent-performance-coaching';
+import { detectLanguages } from '@/ai/flows/detect-languages-flow';
+import { classifyCallOutcome } from '@/ai/flows/classify-call-outcome-flow';
+import { generateRiskScore } from '@/ai/flows/generate-risk-score-flow';
 import {policyDocuments} from '@/lib/policies';
 import type {AnalysisResult} from '@/lib/types';
 import {mockAnalysisResult} from '@/lib/mock-data'; // For trends and avatar
@@ -19,6 +22,12 @@ function extractAgentName(transcript: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  // API Key Authentication
+  const apiKey = req.headers.get('x-api-key');
+  if (apiKey !== process.env.ANALYSIS_API_KEY) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const {transcript} = AnalyzeRequestSchema.parse(body);
@@ -30,6 +39,9 @@ export async function POST(req: NextRequest) {
       intent,
       sentimentTimelineResult,
       violationsResult,
+      languagesResult,
+      outcomeResult,
+      riskScoreResult,
     ] = await Promise.all([
       summarizeConversationAndExtractTopics({transcript}),
       identifyPrimaryCustomerIntent({transcript}),
@@ -38,6 +50,9 @@ export async function POST(req: NextRequest) {
         conversationTranscript: transcript,
         policyDocuments: policyDocuments,
       }),
+      detectLanguages({ transcript }),
+      classifyCallOutcome({ transcript }),
+      generateRiskScore({ transcript }),
     ]);
 
     const coachingInput = {
@@ -53,7 +68,7 @@ export async function POST(req: NextRequest) {
 
     const result: AnalysisResult = {
       transcript: transcript,
-      language: 'English (US)', // Hardcoded for now
+      languages: languagesResult.languages,
       summary: summaryAndTopics.summary,
       overallSentiment: summaryAndTopics.overallSentiment,
       primaryCustomerIntent: intent.primaryCustomerIntent,
@@ -61,7 +76,6 @@ export async function POST(req: NextRequest) {
       sentimentTimeline: sentimentTimelineResult.timeline,
       policyViolations: violationsResult.violationDetails.map(v => ({
         ...v,
-        // The flow returns LOW, MEDIUM, HIGH. The type expects the same.
         severity: v.severity as 'LOW' | 'MEDIUM' | 'HIGH',
       })),
       agentPerformance: {
@@ -76,6 +90,8 @@ export async function POST(req: NextRequest) {
           reference: p.reference,
         })),
       },
+      callOutcome: outcomeResult,
+      riskScore: riskScoreResult,
       trends: mockAnalysisResult.trends, // mock
     };
 

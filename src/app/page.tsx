@@ -24,24 +24,25 @@ export default function DashboardPage() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'x-api-key': process.env.NEXT_PUBLIC_ANALYSIS_API_KEY || 'secret-key-for-dev',
           },
           body: JSON.stringify({ transcript }),
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
 
         const result = await response.json();
         setAnalysisResult(result);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to analyze:', error);
         toast({
           variant: 'destructive',
           title: 'Analysis Failed',
-          description: 'Could not analyze the transcript. Please try again.',
+          description: error.message || 'Could not analyze the transcript. Please try again.',
         });
-        // Optionally, reset to a known state or show an error message in the view
         setAnalysisResult(null);
       }
     });

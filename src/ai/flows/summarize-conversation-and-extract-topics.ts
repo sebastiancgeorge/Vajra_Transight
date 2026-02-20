@@ -33,6 +33,7 @@ const summarizeConversationPrompt = ai.definePrompt({
   input: { schema: ConversationTranscriptInputSchema },
   output: { schema: ConversationAnalysisOutputSchema },
   prompt: `You are an expert assistant for a call center manager. Your task is to analyze a customer conversation transcript and provide a concise summary, a list of key topics discussed, and the overall sentiment.
+The transcript may contain multiple speakers, identified by 'Speaker (Name):'.
 
 Conversation Transcript:
 {{{transcript}}}

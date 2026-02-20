@@ -51,6 +51,7 @@ const prompt = ai.definePrompt({
   output: {schema: AnalyzeSentimentTimelineOutputSchema},
   prompt: `Analyze the following conversation transcript and break it down into chronological segments. For each segment, provide a sentiment score from -1.0 (very negative) to 1.0 (very positive), a brief description of the text, and a timestamp.
   The conversation should be broken into about 5-7 segments.
+  The transcript may contain multiple speakers, identified by 'Speaker (Name):'.
 
 Transcript:
 {{{transcript}}}`,
