@@ -20,9 +20,6 @@ import {
 } from '@/firebase';
 import { collection, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
-import { History } from 'lucide-react';
-import { HistoryItem } from '@/components/dashboard/history-item';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
@@ -185,47 +182,33 @@ export default function DashboardPage() {
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar 
+        showHistory
+        history={analysisHistory}
+        isHistoryLoading={isHistoryLoading}
+        onSelectHistoryItem={setSelectedAnalysis}
+        selectedHistoryItemId={selectedAnalysis?.id}
+      />
       <SidebarInset>
-        <div className="flex h-svh">
-          <div className="w-1/4 max-w-xs border-r">
-              <div className="flex h-16 items-center border-b px-4">
-                  <h2 className="font-headline text-lg font-semibold flex items-center gap-2"><History className="w-5 h-5"/> History</h2>
-              </div>
-              <ScrollArea className="h-[calc(100svh-4rem)]">
-                  <div className="p-2 space-y-1">
-                      {isHistoryLoading && <p className="p-2 text-sm text-muted-foreground">Loading history...</p>}
-                      {analysisHistory && analysisHistory.map((item) => (
-                        <HistoryItem
-                            key={item.id}
-                            item={item}
-                            isSelected={selectedAnalysis?.id === item.id}
-                            onClick={() => setSelectedAnalysis(item)}
-                        />
-                      ))}
-                  </div>
-              </ScrollArea>
-          </div>
-          <div className="flex-1 flex flex-col">
-            <AppHeader />
-            <ScrollArea className="h-[calc(100svh-4rem)]">
-              <main className="flex-1 space-y-8 p-4 md:p-6 lg:p-8">
-                {isClient ? (
-                  <AnalysisForm
-                    transcript={transcript}
-                    setTranscript={setTranscript}
-                    onAnalyze={handleAnalyze}
-                    isPending={isAnalyzing}
-                    isTranscribing={isTranscribing}
-                    onFileChange={handleFileChange}
-                  />
-                ) : (
-                  <Skeleton className="h-[250px] w-full rounded-lg" />
-                )}
-                <AnalysisView analysisResult={fullAnalysisResult} isPending={isAnalyzing || (isHistoryLoading && !analysisHistory)} />
-              </main>
-            </ScrollArea>
-          </div>
+        <div className="flex h-svh flex-col">
+          <AppHeader />
+          <ScrollArea className="h-[calc(100svh-4rem)]">
+            <main className="flex-1 space-y-8 p-4 md:p-6 lg:p-8">
+              {isClient ? (
+                <AnalysisForm
+                  transcript={transcript}
+                  setTranscript={setTranscript}
+                  onAnalyze={handleAnalyze}
+                  isPending={isAnalyzing}
+                  isTranscribing={isTranscribing}
+                  onFileChange={handleFileChange}
+                />
+              ) : (
+                <Skeleton className="h-[250px] w-full rounded-lg" />
+              )}
+              <AnalysisView analysisResult={fullAnalysisResult} isPending={isAnalyzing || (isHistoryLoading && !analysisHistory)} />
+            </main>
+          </ScrollArea>
         </div>
       </SidebarInset>
     </SidebarProvider>

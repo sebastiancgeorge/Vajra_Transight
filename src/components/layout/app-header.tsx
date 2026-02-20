@@ -3,7 +3,6 @@
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +15,6 @@ import { useUser } from '@/firebase';
 import { Skeleton } from '../ui/skeleton';
 
 export function AppHeader() {
-  const isMobile = useIsMobile();
   const { user, isUserLoading } = useUser();
 
   const getInitials = (email?: string | null) => {
@@ -26,7 +24,7 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
-      {isMobile && <SidebarTrigger />}
+      <SidebarTrigger />
       <div className="flex-1">
         {/* Can be used for breadcrumbs or page titles */}
       </div>
