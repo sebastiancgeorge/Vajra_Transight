@@ -28,7 +28,7 @@ const transcribeAudioFlow = ai.defineFlow(
       model: 'googleai/gemini-1.5-pro',
       prompt: [
         { media: { url: audioDataUri } },
-        { text: 'You are an expert transcriptionist. Transcribe the following audio accurately. If there are multiple speakers, label them as "Speaker 1:", "Speaker 2:", etc.' },
+        { text: 'You are an expert transcriptionist. Your task is to transcribe the audio provided. First, verify if the provided media is a valid audio or video file from which audio can be extracted. If it is not, or if the audio is silent or unintelligible, return an error message explaining the problem. Otherwise, transcribe the audio accurately. If there are multiple speakers, label them as "Speaker 1:", "Speaker 2:", etc.' },
       ],
     });
 

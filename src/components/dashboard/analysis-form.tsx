@@ -92,7 +92,7 @@ export function AnalysisForm({
             ref={fileInputRef}
             onChange={handleFileChange}
             className="hidden"
-            accept="audio/*,video/mp4,video/mpeg,video/quicktime"
+            accept="audio/*,video/mp4,video/mpeg,video/quicktime,video/x-msvideo,video/x-flv,video/webm"
             disabled={isTranscribing}
           />
         </div>
