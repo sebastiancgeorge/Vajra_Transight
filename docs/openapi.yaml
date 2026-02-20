@@ -1,0 +1,232 @@
+openapi: 3.0.3
+info:
+  title: Verity Insights API
+  description: API for transcribing audio and analyzing conversation transcripts for the Verity Insights platform.
+  version: 1.0.0
+servers:
+  - url: /
+    description: Local server
+paths:
+  /api/transcribe:
+    post:
+      summary: Transcribe Audio File
+      description: Accepts an audio file as a data URI and returns the transcribed text using AssemblyAI.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranscribeRequest'
+      responses:
+        '200':
+          description: Successful transcription.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscribeResponse'
+        '400':
+          description: Invalid request body.
+        '500':
+          description: Internal server error during transcription.
+  /api/analyze:
+    post:
+      summary: Analyze Conversation Transcript
+      description: Accepts a conversation transcript and returns a detailed AI-powered analysis using a Gemini model.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeRequest'
+      responses:
+        '200':
+          description: Successful analysis.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeResponse'
+        '400':
+          description: Invalid request body.
+        '500':
+          description: Internal server error during analysis.
+components:
+  schemas:
+    TranscribeRequest:
+      type: object
+      properties:
+        audioDataUri:
+          type: string
+          description: "The audio file encoded as a data URI. Must include a MIME type and use Base64 encoding. Format: 'data:<mimetype>;base64,<encoded_data>'"
+          format: uri
+      required:
+        - audioDataUri
+    TranscribeResponse:
+      type: object
+      properties:
+        transcript:
+          type: string
+          description: The transcribed text of the audio, including speaker labels.
+    AnalyzeRequest:
+      type: object
+      properties:
+        transcript:
+          type: string
+          description: The full text transcript of the conversation to be analyzed.
+      required:
+        - transcript
+
+    # --- Analysis Response Schemas ---
+
+    AnalyzeResponse:
+      type: object
+      description: The comprehensive analysis result for a conversation. This is a subset of the full AnalysisResult type, representing what the API returns directly.
+      properties:
+        transcript:
+          type: string
+          description: The original transcript that was analyzed.
+        languages:
+          type: array
+          items:
+            type: string
+          description: An array of languages detected in the transcript (e.g., ["English", "Spanish"]).
+        summary:
+          type: string
+          description: A concise summary of the entire conversation.
+        overallSentiment:
+          type: string
+          enum: ['Positive', 'Neutral', 'Negative']
+          description: The single overall sentiment of the conversation.
+        primaryCustomerIntent:
+          type: string
+          description: "A concise classification of the customer's primary reason for the interaction (e.g., 'Technical Support')."
+        keyTopics:
+          type: array
+          items:
+            type: string
+          description: A list of 3-5 key topics discussed in the conversation.
+        sentimentTimeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/SentimentPoint'
+          description: An array of sentiment points representing the conversation's emotional trajectory.
+        policyViolations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyViolation'
+          description: An array of any detected policy violations. Is empty if no violations are found.
+        agentPerformance:
+          $ref: '#/components/schemas/AgentPerformance'
+        callOutcome:
+          $ref: '#/components/schemas/CallOutcome'
+        riskScore:
+          $ref: '#/components/schemas/RiskScore'
+
+    SentimentPoint:
+      type: object
+      properties:
+        segment:
+          type: integer
+          description: The chronological segment number of the conversation.
+        time:
+          type: string
+          description: A representative timestamp for the segment (e.g., "0:25").
+        sentiment:
+          type: number
+          format: float
+          minimum: -1
+          maximum: 1
+          description: A score from -1 (very negative) to 1 (very positive).
+        text:
+          type: string
+          description: A brief summary of the conversation text for this segment.
+
+    PolicyViolation:
+      type: object
+      properties:
+        policyViolated:
+          type: string
+          description: The specific policy that was violated.
+        violationDescription:
+          type: string
+          description: A detailed explanation of how the policy was violated.
+        relevantExcerpt:
+          type: string
+          description: The exact text snippet from the conversation where the violation occurred.
+        severity:
+          type: string
+          enum: ['LOW', 'MEDIUM', 'HIGH']
+          description: The severity of the violation.
+
+    AgentPerformance:
+      type: object
+      properties:
+        agentName:
+          type: string
+          description: The name of the agent involved in the conversation.
+        agentId:
+          type: string
+          description: The unique identifier for the agent.
+        overallScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: "A numerical score from 0 to 100 for the agent's performance."
+        strengths:
+          type: array
+          items:
+            type: string
+          description: "Specific positive aspects of the agent's performance."
+        areasForImprovement:
+          type: array
+          items:
+            type: string
+          description: Specific areas where the agent can improve.
+        actionableCoachingPoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentCoachingPoint'
+          description: A list of concrete coaching points for the agent.
+        talkToListenRatio:
+          type: string
+          description: The agent-to-customer talk-to-listen ratio (e.g., "40:60").
+          example: "35:65"
+        interruptionCount:
+          type: integer
+          description: The number of times the agent interrupted the customer.
+        sentimentTrend:
+          type: string
+          enum: ['Improving', 'Declining', 'Stable']
+          description: The trend of sentiment throughout the conversation.
+
+    AgentCoachingPoint:
+      type: object
+      properties:
+        point:
+          type: string
+          description: A concrete, actionable coaching advice for the agent.
+        reference:
+          type: string
+          description: An optional reference to a specific part of the conversation (e.g., a direct quote).
+
+    CallOutcome:
+      type: object
+      properties:
+        outcome:
+          type: string
+          enum: ['Resolved', 'Escalated', 'Dropped', 'Requires Follow-up', 'No Action Needed']
+          description: The final classified outcome of the call.
+        reason:
+          type: string
+          description: A brief explanation for the classified outcome.
+
+    RiskScore:
+      type: object
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: A risk score from 0 (no risk) to 100 (high risk).
+        reason:
+          type: string
+          description: A brief justification for the assigned risk score.
