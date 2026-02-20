@@ -42,7 +42,7 @@ Agent (Sarah): Hello, thank you for calling TechSupport.` };
         speaker_labels: true,
         speakers_expected: 2,
         sentiment_analysis: false, // Disabled: Handled by the main analysis flow
-        language_detection: true, // Disabled: Handled by the main analysis flow
+        language_detection: false, // Disabled: Handled by the main analysis flow
         summarization: false,      // Disabled: Handled by the main analysis flow
       };
       
