@@ -1,16 +1,18 @@
 'use client';
 
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, Loader2 } from 'lucide-react';
-import type React from 'react';
+import { FileText, Loader2, Upload } from 'lucide-react';
 
 interface AnalysisFormProps {
   transcript: string;
   setTranscript: (value: string) => void;
   onAnalyze: () => void;
   isPending: boolean;
+  isTranscribing: boolean;
+  onFileChange: (file: File) => void;
 }
 
 export function AnalysisForm({
@@ -18,7 +20,26 @@ export function AnalysisForm({
   setTranscript,
   onAnalyze,
   isPending,
+  isTranscribing,
+  onFileChange,
 }: AnalysisFormProps) {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      onFileChange(file);
+    }
+    // Reset the file input so the same file can be selected again
+    if (event.target) {
+      event.target.value = '';
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -40,10 +61,10 @@ export function AnalysisForm({
           value={transcript}
           onChange={(e) => setTranscript(e.target.value)}
           className="min-h-[150px] font-code text-sm"
-          disabled={isPending}
+          disabled={isPending || isTranscribing}
         />
         <div className="flex flex-col sm:flex-row gap-2">
-          <Button onClick={onAnalyze} disabled={isPending || !transcript}>
+          <Button onClick={onAnalyze} disabled={isPending || isTranscribing || !transcript}>
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -53,9 +74,27 @@ export function AnalysisForm({
               'Analyze Conversation'
             )}
           </Button>
-          <Button variant="outline" disabled={isPending}>
-            Upload Audio File
+          <Button variant="outline" onClick={handleUploadClick} disabled={isPending || isTranscribing}>
+            {isTranscribing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Transcribing...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Audio
+              </>
+            )}
           </Button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept="audio/*"
+            disabled={isTranscribing}
+          />
         </div>
       </CardContent>
     </Card>

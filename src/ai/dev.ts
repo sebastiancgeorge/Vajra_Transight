@@ -11,3 +11,4 @@ import '@/ai/flows/analyze-sentiment-timeline.ts';
 import '@/ai/flows/classify-call-outcome-flow.ts';
 import '@/ai/flows/detect-languages-flow.ts';
 import '@/ai/flows/generate-risk-score-flow.ts';
+import '@/ai/flows/transcribe-audio.ts';

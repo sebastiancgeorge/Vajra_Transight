@@ -27,7 +27,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
   const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisResult | null>(null);
-  const [isAnalyzing, startTransition] = useTransition();
+  const [isAnalyzing, startAnalysisTransition] = useTransition();
+  const [isTranscribing, startTranscriptionTransition] = useTransition();
   const [transcript, setTranscript] = useState<string>(mockTranscript);
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
@@ -66,14 +67,13 @@ export default function DashboardPage() {
   }, [analysisHistory, selectedAnalysis]);
 
   const handleAnalyze = () => {
-    startTransition(async () => {
+    startAnalysisTransition(async () => {
       setSelectedAnalysis(null);
       try {
         const response = await fetch('/api/analyze', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': process.env.NEXT_PUBLIC_ANALYSIS_API_KEY || 'secret-key-for-dev',
           },
           body: JSON.stringify({ transcript }),
         });
@@ -103,6 +103,50 @@ export default function DashboardPage() {
           description: error.message || 'Could not analyze the transcript. Please try again.',
         });
         setSelectedAnalysis(null);
+      }
+    });
+  };
+  
+  const handleFileChange = (file: File) => {
+    if (!file) return;
+
+    startTranscriptionTransition(async () => {
+      setTranscript('Transcribing audio, please wait...');
+      try {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+          const audioDataUri = reader.result as string;
+
+          const response = await fetch('/api/transcribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ audioDataUri }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+          }
+
+          const { transcript } = await response.json();
+          setTranscript(transcript);
+          toast({
+            title: 'Transcription Complete',
+            description: 'You can now analyze the conversation.',
+          });
+        };
+        reader.onerror = () => {
+          throw new Error('Failed to read the audio file.');
+        };
+      } catch (error: any) {
+        console.error('Failed to transcribe:', error);
+        setTranscript(mockTranscript); // Reset to mock on failure
+        toast({
+          variant: 'destructive',
+          title: 'Transcription Failed',
+          description: error.message || 'Could not transcribe the audio file. Please try again.',
+        });
       }
     });
   };
@@ -172,6 +216,8 @@ export default function DashboardPage() {
                     setTranscript={setTranscript}
                     onAnalyze={handleAnalyze}
                     isPending={isAnalyzing}
+                    isTranscribing={isTranscribing}
+                    onFileChange={handleFileChange}
                   />
                 ) : (
                   <Skeleton className="h-[250px] w-full rounded-lg" />
