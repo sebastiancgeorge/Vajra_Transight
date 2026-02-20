@@ -23,12 +23,19 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { History } from 'lucide-react';
 import { HistoryItem } from '@/components/dashboard/history-item';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
   const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisResult | null>(null);
   const [isAnalyzing, startTransition] = useTransition();
   const [transcript, setTranscript] = useState<string>(mockTranscript);
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   const auth = useAuth();
   const firestore = useFirestore();
@@ -159,12 +166,16 @@ export default function DashboardPage() {
             <AppHeader />
             <ScrollArea className="h-[calc(100svh-4rem)]">
               <main className="flex-1 space-y-8 p-4 md:p-6 lg:p-8">
-                <AnalysisForm
-                  transcript={transcript}
-                  setTranscript={setTranscript}
-                  onAnalyze={handleAnalyze}
-                  isPending={isAnalyzing}
-                />
+                {isClient ? (
+                  <AnalysisForm
+                    transcript={transcript}
+                    setTranscript={setTranscript}
+                    onAnalyze={handleAnalyze}
+                    isPending={isAnalyzing}
+                  />
+                ) : (
+                  <Skeleton className="h-[250px] w-full rounded-lg" />
+                )}
                 <AnalysisView analysisResult={fullAnalysisResult} isPending={isAnalyzing || (isHistoryLoading && !analysisHistory)} />
               </main>
             </ScrollArea>
