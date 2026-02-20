@@ -40,6 +40,7 @@ Agent (Sarah): Hello, thank you for calling TechSupport.` };
       const transcript = await client.transcripts.transcribe({
         audio: audioDataUri,
         speaker_labels: true,
+        speech_model: 'universal-2',
       });
 
       if (transcript.status === 'error') {
