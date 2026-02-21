@@ -94,3 +94,24 @@ The AI analysis can be customized by modifying the configuration object in `src/
 - **Business Domain**: The industry context (e.g., 'E-commerce').
 - **Products**: A list of company products to help the AI identify them in conversations.
 - **Policies**: A list of rules and policies that the AI will use to check for compliance violations.
+
+## Limitations
+
+This project is currently a prototype with certain limitations:
+
+- **Prototype-Only Security Rules**: The Firestore security rules are configured to allow any authenticated user to read/write data, which is suitable for development but not for production.
+- **Static Configuration**: The business domain, products, and policies are currently hard-coded in `src/lib/organization.ts`. A production system would manage this configuration in the database.
+- **No True RAG**: The system passes policy context directly in the prompt. It does not use a vector database to dynamically retrieve relevant documents (Retrieval-Augmented Generation).
+- **Single-Tenant**: The application is designed for a single organization and does not yet support multi-tenancy or distinct user roles.
+- **Anonymous Authentication**: The app uses anonymous Firebase authentication, which is not suitable for a production environment where named user accounts are required.
+
+## Future Scope
+
+The current application provides a strong foundation for a commercial-grade product. Future development could include:
+
+- **Full RAG Implementation**: Integrate a vector database (like Firestore Vector Search) to allow the AI to dynamically retrieve information from a large knowledge base of policies, product manuals, and support articles for more accurate and context-aware analysis.
+- **Real-time Analysis**: Transition from batch processing of audio files to real-time transcription and analysis of live call streams using WebSockets.
+- **Multi-Tenant SaaS Architecture**: Implement a full multi-tenant system with organization-specific data isolation, user roles (admins, managers, agents), and subscription-based billing.
+- **Advanced Aggregate Dashboards**: Build dashboards for managers to track team-wide KPIs, analyze trends over time, and compare agent performance.
+- **Dynamic Configuration UI**: Create a comprehensive settings portal for administrators to manage all organization-specific configurations (policies, products, users) directly from the user interface.
+- **Production-Ready Authentication**: Replace anonymous sign-in with a robust authentication system (e.g., email/password, SSO) to manage user identity securely.
