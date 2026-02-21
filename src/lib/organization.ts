@@ -1,4 +1,5 @@
 export const organizationConfig = {
+  id: 'default-org',
   businessDomain: 'E-commerce & Consumer Electronics',
   products: ['XT-5000 Camera', 'CyberSound Headphones', 'InstaView Smart Display'],
   policies: [

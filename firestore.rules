@@ -8,49 +8,14 @@ service cloud.firestore {
      * =====================================================================
      *
      * Core Philosophy:
-     * This ruleset enforces a strict multi-tenant, organization-based data
-     * segregation model. All data is scoped to a specific organization, and a
-     * user's access is determined by their membership and role within that
-     * organization. Cross-organization data access is strictly forbidden.
+     * This ruleset is currently configured for a single-user prototype
+     * environment. The helper functions `isMemberOfOrg` and `isAdmin` are set
+     * to only require authentication, which grants any signed-in user broad
+     * read/write access for development purposes.
      *
-     * Data Structure:
-     * All application data is nested under the top-level collection
-     * `/organizations/{organizationId}`. This hierarchical structure is the
-     * primary mechanism for data isolation between different client tenants.
-     *
-     * Key Security Decisions:
-     * - Custom Claims for Authorization: To ensure performant and scalable
-     *   security checks, these rules depend on Firebase Authentication Custom
-     *   Claims. When a user authenticates, the backend must set the following
-     *   claims on their token:
-     *     - `orgId`: The ID of the organization the user belongs to.
-     *     - `role`: The user's role within that organization (e.g., 'admin',
-     *       'analyst').
-     *   This avoids slow and costly database reads in every rule evaluation.
-     * - Role-Based Access Control (RBAC): Access within an organization is
-     *   governed by roles. A simplified model is used:
-     *     - 'admin': Has full read/write access to all of their
-     *       organization's data.
-     *     - 'analyst', 'agent': Have read-only access to their organization's
-     *       data.
-     * - Default Deny: Access is implicitly denied. Rules only grant permissions
-     *   explicitly. Unauthorized operations are always rejected.
-     * - Backend-Managed Organizations: The top-level `/organizations`
-     *   collection is read-only for clients. Creating, updating, or deleting
-     *   organization documents is assumed to be a privileged backend operation.
-     *
-     * Denormalization for Authorization:
-     * Following best practices, every document within an organization's data
-     * tree contains a denormalized `organizationId` field. On create and
-     * update operations, rules validate that this field matches the ID in the
-     * document path, ensuring data integrity and preventing data from being
-     * associated with the wrong organization.
-     *
-     * Structural Segregation:
-     * The `/organizations/{organizationId}` path structure naturally enforces
-     * structural segregation, ensuring that data from different tenants is
-     * never mixed in the same collection path. This simplifies rules for list
-     * operations, as any query is inherently scoped to a single organization.
+     * For a production multi-tenant application, these functions MUST be
+     * updated to inspect Firebase Authentication Custom Claims (`orgId`, `role`)
+     * to enforce true data segregation and role-based access control.
      *
      */
 
@@ -66,24 +31,26 @@ service cloud.firestore {
     }
 
     /**
-     * Checks if the authenticated user's custom claim `orgId` matches the
-     * organization ID from the document path. This is the primary function for
-     * verifying a user's membership in an organization.
+     * PROTOTYPE-ONLY-RULE: Grants access if the user is signed in.
+     * In a real multi-tenant app, this would check for organization membership via custom claims:
+     * `return isSignedIn() && request.auth.token.orgId == orgId;`
      */
     function isMemberOfOrg(orgId) {
-      return isSignedIn() && request.auth.token.orgId == orgId;
+      return isSignedIn();
     }
 
     /**
-     * Checks if the user is an admin of the specified organization.
+     * PROTOTYPE-ONLY-RULE: Grants admin rights if the user is signed in.
+     * In a real multi-tenant app, this would check for an admin role claim:
+     * `return isMemberOfOrg(orgId) && request.auth.token.role == 'admin';`
      */
     function isAdmin(orgId) {
-      return isMemberOfOrg(orgId) && request.auth.token.role == 'admin';
+      return isSignedIn();
     }
 
     /**
      * Determines if a user has read access to organization data.
-     * All authenticated members of the organization are granted read access.
+     * Inherits logic from `isMemberOfOrg`.
      */
     function canRead(orgId) {
       return isMemberOfOrg(orgId);
@@ -91,7 +58,7 @@ service cloud.firestore {
 
     /**
      * Determines if a user has write access to organization data.
-     * By default, only admins have write access.
+     * Inherits logic from `isAdmin`.
      */
     function canWrite(orgId) {
       return isAdmin(orgId);
@@ -188,43 +155,37 @@ service cloud.firestore {
      * @principle Establishes a standard organization-wide security posture: read for all members, write for admins.
      */
     match /organizations/{organizationId}/contextDocuments/{docId} {
-      allow get: if canRead(organizationId);
-      allow list: if canRead(organizationId);
+      allow get, list: if canRead(organizationId);
       allow create: if canWrite(organizationId) && isCreatingWithValidOrgId(organizationId);
       allow update: if resource != null && canWrite(organizationId) && isOrgIdImmutable();
       allow delete: if resource != null && canWrite(organizationId);
     }
     match /organizations/{organizationId}/agents/{docId} {
-      allow get: if canRead(organizationId);
-      allow list: if canRead(organizationId);
+      allow get, list: if canRead(organizationId);
       allow create: if canWrite(organizationId) && isCreatingWithValidOrgId(organizationId);
       allow update: if resource != null && canWrite(organizationId) && isOrgIdImmutable();
       allow delete: if resource != null && canWrite(organizationId);
     }
     match /organizations/{organizationId}/conversations/{docId} {
-      allow get: if canRead(organizationId);
-      allow list: if canRead(organizationId);
+      allow get, list: if canRead(organizationId);
       allow create: if canWrite(organizationId) && isCreatingWithValidOrgId(organizationId);
       allow update: if resource != null && canWrite(organizationId) && isOrgIdImmutable();
       allow delete: if resource != null && canWrite(organizationId);
     }
     match /organizations/{organizationId}/insights/{docId} {
-      allow get: if canRead(organizationId);
-      allow list: if canRead(organizationId);
+      allow get, list: if canRead(organizationId);
       allow create: if canWrite(organizationId) && isCreatingWithValidOrgId(organizationId);
       allow update: if resource != null && canWrite(organizationId) && isOrgIdImmutable();
       allow delete: if resource != null && canWrite(organizationId);
     }
     match /organizations/{organizationId}/kpiDefinitions/{docId} {
-      allow get: if canRead(organizationId);
-      allow list: if canRead(organizationId);
+      allow get, list: if canRead(organizationId);
       allow create: if canWrite(organizationId) && isCreatingWithValidOrgId(organizationId);
       allow update: if resource != null && canWrite(organizationId) && isOrgIdImmutable();
       allow delete: if resource != null && canWrite(organizationId);
     }
     match /organizations/{organizationId}/kpiValues/{docId} {
-      allow get: if canRead(organizationId);
-      allow list: if canRead(organizationId);
+      allow get, list: if canRead(organizationId);
       allow create: if canWrite(organizationId) && isCreatingWithValidOrgId(organizationId);
       allow update: if resource != null && canWrite(organizationId) && isOrgIdImmutable();
       allow delete: if resource != null && canWrite(organizationId);
@@ -240,8 +201,7 @@ service cloud.firestore {
      * @principle Combines organization-wide read access with user-specific ownership for writes.
      */
     match /organizations/{organizationId}/reportDefinitions/{reportDefinitionId} {
-      allow get: if canRead(organizationId);
-      allow list: if canRead(organizationId);
+      allow get, list: if canRead(organizationId);
       allow create: if isMemberOfOrg(organizationId) && request.resource.data.userId == request.auth.uid && isCreatingWithValidOrgId(organizationId);
       allow update: if resource != null && isMemberOfOrg(organizationId) && (isAdmin(organizationId) || isOwner(resource.data.userId)) && isOrgIdImmutable() && request.resource.data.userId == resource.data.userId;
       allow delete: if resource != null && isMemberOfOrg(organizationId) && (isAdmin(organizationId) || isOwner(resource.data.userId));

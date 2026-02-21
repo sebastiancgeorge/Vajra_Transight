@@ -21,6 +21,7 @@ import {
 import { collection, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import { organizationConfig } from '@/lib/organization';
 
 export default function DashboardPage() {
   const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisResult | null>(null);
@@ -50,7 +51,7 @@ export default function DashboardPage() {
   const conversationsQuery = useMemoFirebase(
     () =>
       firestore
-        ? query(collection(firestore, 'conversations'), orderBy('createdAt', 'desc'))
+        ? query(collection(firestore, 'organizations', organizationConfig.id, 'conversations'), orderBy('createdAt', 'desc'))
         : null,
     [firestore]
   );
@@ -84,8 +85,8 @@ export default function DashboardPage() {
 
         // Save result to Firestore
         if (firestore) {
-          const conversationsCol = collection(firestore, 'conversations');
-          const newDoc = { ...result, createdAt: serverTimestamp() };
+          const conversationsCol = collection(firestore, 'organizations', organizationConfig.id, 'conversations');
+          const newDoc = { ...result, organizationId: organizationConfig.id, createdAt: serverTimestamp() };
           await addDocumentNonBlocking(conversationsCol, newDoc);
           toast({
             title: 'Analysis Complete',
