@@ -79,19 +79,30 @@ components:
 
     AnalyzeResponse:
       type: object
-      description: The comprehensive analysis result for a conversation. This is a subset of the full AnalysisResult type, representing what the API returns directly.
+      description: The comprehensive analysis result for a conversation.
       properties:
         transcript:
           type: string
           description: The original transcript that was analyzed.
+        analytics:
+          $ref: '#/components/schemas/AnalysisAnalytics'
+        classifications:
+          $ref: '#/components/schemas/AnalysisClassifications'
+        agentPerformance:
+          $ref: '#/components/schemas/AgentPerformance'
+          
+    AnalysisAnalytics:
+      type: object
+      description: Core analytical insights from the conversation.
+      properties:
+        summary:
+          type: string
+          description: A concise summary of the entire conversation.
         languages:
           type: array
           items:
             type: string
           description: An array of languages detected in the transcript (e.g., ["English", "Spanish"]).
-        summary:
-          type: string
-          description: A concise summary of the entire conversation.
         overallSentiment:
           type: string
           enum: ['Positive', 'Neutral', 'Negative']
@@ -109,17 +120,20 @@ components:
           items:
             $ref: '#/components/schemas/SentimentPoint'
           description: An array of sentiment points representing the conversation's emotional trajectory.
+
+    AnalysisClassifications:
+      type: object
+      description: Risks, flags, and other classifications identified in the conversation.
+      properties:
+        callOutcome:
+          $ref: '#/components/schemas/CallOutcome'
+        riskScore:
+          $ref: '#/components/schemas/RiskScore'
         policyViolations:
           type: array
           items:
             $ref: '#/components/schemas/PolicyViolation'
           description: An array of any detected policy violations. Is empty if no violations are found.
-        agentPerformance:
-          $ref: '#/components/schemas/AgentPerformance'
-        callOutcome:
-          $ref: '#/components/schemas/CallOutcome'
-        riskScore:
-          $ref: '#/components/schemas/RiskScore'
 
     SentimentPoint:
       type: object

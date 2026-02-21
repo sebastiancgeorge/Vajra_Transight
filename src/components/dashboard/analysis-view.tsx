@@ -59,36 +59,36 @@ export function AnalysisView({ analysisResult, isPending }: AnalysisViewProps) {
       <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <OverviewCard
           title="Overall Sentiment"
-          value={analysisResult.overallSentiment}
+          value={analysisResult.analytics.overallSentiment}
           icon={Smile}
         />
         <OverviewCard
           title="Primary Intent"
-          value={analysisResult.primaryCustomerIntent}
+          value={analysisResult.analytics.primaryCustomerIntent}
           icon={FileQuestion}
         />
         <OverviewCard
           title="Call Outcome"
-          value={analysisResult.callOutcome.outcome}
+          value={analysisResult.classifications.callOutcome.outcome}
           icon={CheckCircle}
         />
         <OverviewCard
           title="Language(s)"
-          value={analysisResult.languages}
+          value={analysisResult.analytics.languages}
           icon={Languages}
         />
       </div>
 
       <SummaryCard
-        summary={analysisResult.summary}
-        topics={analysisResult.keyTopics}
+        summary={analysisResult.analytics.summary}
+        topics={analysisResult.analytics.keyTopics}
       />
       <SentimentTimelineCard
-        timeline={analysisResult.sentimentTimeline}
+        timeline={analysisResult.analytics.sentimentTimeline}
       />
       <TrendsCard trends={analysisResult.trends} />
-      <RiskScoreCard riskScore={analysisResult.riskScore} />
-      <PolicyViolationsCard violations={analysisResult.policyViolations} />
+      <RiskScoreCard riskScore={analysisResult.classifications.riskScore} />
+      <PolicyViolationsCard violations={analysisResult.classifications.policyViolations} />
       <AgentCoachingCard performance={analysisResult.agentPerformance} />
       <JsonOutput data={analysisResult} />
     </div>

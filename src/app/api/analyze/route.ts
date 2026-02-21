@@ -15,12 +15,6 @@ function extractAgentName(transcript: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  // Simplified auth for local dev, but you might re-enable this in production.
-  // const apiKey = req.headers.get('x-api-key');
-  // if (apiKey !== process.env.ANALYSIS_API_KEY) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  // }
-
   try {
     const body = await req.json();
     const {transcript} = AnalyzeRequestSchema.parse(body);
@@ -35,30 +29,27 @@ export async function POST(req: NextRequest) {
       policyDocuments: organizationConfig.policies,
     });
 
-    // The AI now returns the complete analysis. We just need to structure it
-    // for our application's `AnalysisResult` type.
+    // Map the structured AI output to our application's AnalysisResult type.
     const result: Omit<AnalysisResult, 'id' | 'createdAt' | 'trends' | 'agentPerformance.agentAvatarUrl'> = {
       transcript: transcript,
-      languages: analysisOutput.languages,
-      summary: analysisOutput.summary,
-      overallSentiment: analysisOutput.overallSentiment,
-      primaryCustomerIntent: analysisOutput.primaryCustomerIntent,
-      keyTopics: analysisOutput.keyTopics,
-      sentimentTimeline: analysisOutput.sentimentTimeline,
-      policyViolations: analysisOutput.policyViolations, // The structure already matches
-      agentPerformance: {
-        agentName: agentName, // We still extract this manually for consistency
-        agentId: 'A-78910', // This can be improved to be dynamic later
-        overallScore: analysisOutput.agentPerformance.overallScore,
-        strengths: analysisOutput.agentPerformance.strengths,
-        areasForImprovement: analysisOutput.agentPerformance.areasForImprovement,
-        actionableCoachingPoints: analysisOutput.agentPerformance.actionableCoachingPoints,
-        talkToListenRatio: analysisOutput.agentPerformance.talkToListenRatio,
-        interruptionCount: analysisOutput.agentPerformance.interruptionCount,
-        sentimentTrend: analysisOutput.agentPerformance.sentimentTrend,
+      analytics: {
+        summary: analysisOutput.analytics.summary,
+        languages: analysisOutput.analytics.languages,
+        overallSentiment: analysisOutput.analytics.overallSentiment,
+        primaryCustomerIntent: analysisOutput.analytics.primaryCustomerIntent,
+        keyTopics: analysisOutput.analytics.keyTopics,
+        sentimentTimeline: analysisOutput.analytics.sentimentTimeline,
       },
-      callOutcome: analysisOutput.callOutcome, // Structure matches
-      riskScore: analysisOutput.riskScore, // Structure matches
+      classifications: {
+        callOutcome: analysisOutput.classifications.callOutcome,
+        riskScore: analysisOutput.classifications.riskScore,
+        policyViolations: analysisOutput.classifications.policyViolations,
+      },
+      agentPerformance: {
+        agentName: agentName,
+        agentId: 'A-78910', // This can be improved to be dynamic later
+        ...analysisOutput.agentPerformance,
+      },
     };
 
     return NextResponse.json(result);

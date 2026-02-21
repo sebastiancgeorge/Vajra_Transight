@@ -35,7 +35,7 @@ export function HistoryItem({ item, isSelected, onClick }: HistoryItemProps) {
       onClick={onClick}
     >
       <div>
-        <p className="font-semibold text-sm truncate">{item.summary}</p>
+        <p className="font-semibold text-sm truncate">{item.analytics.summary}</p>
         <p className="text-xs text-muted-foreground">
           {timeAgo || <>&nbsp;</>}
         </p>

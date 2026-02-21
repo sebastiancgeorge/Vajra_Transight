@@ -41,13 +41,27 @@ const AgentCoachingPointSchema = z.object({
 });
 
 const AnalyzeConversationOutputSchema = z.object({
-  summary: z.string().describe('A concise summary of the entire conversation.'),
-  languages: z.array(z.string()).describe('An array of all languages detected in the transcript (e.g., ["English", "Spanish"]).'),
-  overallSentiment: z.enum(['Positive', 'Neutral', 'Negative']).describe('The single overall sentiment of the conversation.'),
-  primaryCustomerIntent: z.string().describe("A concise classification of the customer's primary reason for the interaction (e.g., 'Technical Support', 'Billing Inquiry')."),
-  keyTopics: z.array(z.string()).describe('A list of 3-5 key topics discussed in the conversation.'),
-  sentimentTimeline: z.array(SentimentPointSchema).describe('An array of 5-7 sentiment points representing the conversation\'s emotional trajectory.'),
-  policyViolations: z.array(PolicyViolationDetailSchema).describe('An array of any detected policy violations. Should be empty if no violations are found.'),
+  analytics: z.object({
+    summary: z.string().describe('A concise summary of the entire conversation.'),
+    languages: z.array(z.string()).describe('An array of all languages detected in the transcript (e.g., ["English", "Spanish"]).'),
+    overallSentiment: z.enum(['Positive', 'Neutral', 'Negative']).describe('The single overall sentiment of the conversation.'),
+    primaryCustomerIntent: z.string().describe("A concise classification of the customer's primary reason for the interaction (e.g., 'Technical Support', 'Billing Inquiry')."),
+    keyTopics: z.array(z.string()).describe('A list of 3-5 key topics discussed in the conversation.'),
+    sentimentTimeline: z.array(SentimentPointSchema).describe('An array of 5-7 sentiment points representing the conversation\'s emotional trajectory.'),
+  }).describe('Core analytical insights from the conversation.'),
+
+  classifications: z.object({
+    policyViolations: z.array(PolicyViolationDetailSchema).describe('An array of any detected policy violations. Should be empty if no violations are found.'),
+    callOutcome: z.object({
+      outcome: z.enum(['Resolved', 'Escalated', 'Dropped', 'Requires Follow-up', 'No Action Needed']).describe('The final classified outcome of the call.'),
+      reason: z.string().describe('A brief explanation for the classified outcome.'),
+    }),
+    riskScore: z.object({
+      score: z.number().min(0).max(100).describe('A risk score from 0 (no risk) to 100 (high risk) for customer churn or escalation.'),
+      reason: z.string().describe('A brief justification for the assigned risk score.'),
+    }),
+  }).describe('Risks, flags, and classifications detected in the conversation.'),
+  
   agentPerformance: z.object({
     overallScore: z.number().min(0).max(100).describe("A numerical score from 0 to 100 for the agent's performance."),
     strengths: z.array(z.string()).describe("Specific positive aspects of the agent's performance."),
@@ -56,16 +70,9 @@ const AnalyzeConversationOutputSchema = z.object({
     talkToListenRatio: z.string().describe('The agent-to-customer talk-to-listen ratio (e.g., "40:60").'),
     interruptionCount: z.number().describe('The number of times the agent interrupted the customer.'),
     sentimentTrend: z.enum(['Improving', 'Declining', 'Stable']).describe('The trend of sentiment throughout the conversation (Improving, Declining, or Stable).'),
-  }),
-  callOutcome: z.object({
-    outcome: z.enum(['Resolved', 'Escalated', 'Dropped', 'Requires Follow-up', 'No Action Needed']).describe('The final classified outcome of the call.'),
-    reason: z.string().describe('A brief explanation for the classified outcome.'),
-  }),
-  riskScore: z.object({
-    score: z.number().min(0).max(100).describe('A risk score from 0 (no risk) to 100 (high risk) for customer churn or escalation.'),
-    reason: z.string().describe('A brief justification for the assigned risk score.'),
-  }),
+  }).describe("Metrics and coaching points related to the agent's performance."),
 });
+
 export type AnalyzeConversationOutput = z.infer<typeof AnalyzeConversationOutputSchema>;
 
 
@@ -84,18 +91,29 @@ const analysisPrompt = ai.definePrompt({
   output: {schema: AnalyzeConversationOutputSchema},
   prompt: `You are an expert, multi-tasking conversation analysis engine. Your task is to perform a comprehensive analysis of the provided conversation transcript and return a single, structured JSON object with the results.
 
-Analyze the transcript for the following aspects:
+The JSON output MUST be structured with three main top-level keys: "analytics", "classifications", and "agentPerformance".
 
-1.  **Languages**: Identify all languages spoken in the transcript.
-2.  **Summary**: Provide a concise summary of the entire interaction.
-3.  **Overall Sentiment**: Determine the single overall sentiment (Positive, Neutral, or Negative).
-4.  **Primary Customer Intent**: Classify the customer's main reason for the call (e.g., 'Technical Support', 'Billing Inquiry').
-5.  **Key Topics**: Extract 3-5 main topics discussed.
-6.  **Sentiment Timeline**: Break the conversation into 5-7 chronological segments. For each, provide a sentiment score (-1.0 to 1.0), a timestamp, and a brief summary of that segment's text.
-7.  **Policy Violations**: Analyze the transcript against the provided policy documents. Identify any violations, detailing the policy, a description, the relevant excerpt, and severity (LOW, MEDIUM, HIGH). If none, this should be an empty array.
-8.  **Agent Performance**: Evaluate the agent's performance. Provide an overall score (0-100), a list of strengths, areas for improvement, and specific, actionable coaching points with references to the transcript if possible. Also include the agent-to-customer talk-to-listen ratio (e.g., "40:60"), the number of times the agent interrupted the customer, and whether the sentiment trend was "Improving", "Declining", or "Stable" based on the sentiment timeline.
-9.  **Call Outcome**: Classify the final outcome of the call (e.g., Resolved, Escalated) and provide a brief reason.
-10. **Risk Score**: Calculate a customer churn/escalation risk score (0-100) based on factors like frustration and issue resolution, and provide a brief justification.
+1.  **analytics**: This object should contain:
+    -   **summary**: A concise summary of the entire interaction.
+    -   **languages**: An array of all languages spoken in the transcript.
+    -   **overallSentiment**: The single overall sentiment (Positive, Neutral, or Negative).
+    -   **primaryCustomerIntent**: The customer's main reason for the call (e.g., 'Technical Support').
+    -   **keyTopics**: 3-5 main topics discussed.
+    -   **sentimentTimeline**: 5-7 chronological segments with sentiment scores (-1.0 to 1.0), timestamps, and text summaries.
+
+2.  **classifications**: This object should contain:
+    -   **policyViolations**: An array of any violations against the provided policy documents. If none, this should be an empty array.
+    -   **callOutcome**: The final outcome of the call (e.g., Resolved, Escalated) and a brief reason.
+    -   **riskScore**: A customer churn/escalation risk score (0-100) and a brief justification.
+
+3.  **agentPerformance**: This object should contain:
+    -   **overallScore**: An overall performance score for the agent (0-100).
+    -   **strengths**: Positive aspects of the agent's performance.
+    -   **areasForImprovement**: Areas where the agent can improve.
+    -   **actionableCoachingPoints**: Concrete coaching advice.
+    -   **talkToListenRatio**: The agent-to-customer talk-to-listen ratio (e.g., "40:60").
+    -   **interruptionCount**: The number of times the agent interrupted the customer.
+    -   **sentimentTrend**: "Improving", "Declining", or "Stable".
 
 You MUST extract the Agent's name from the transcript (e.g., from "Agent (Name):") to use in your analysis.
 

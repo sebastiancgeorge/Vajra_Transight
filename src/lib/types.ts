@@ -47,19 +47,27 @@ export type RiskScore = {
   reason: string;
 };
 
-export type AnalysisResult = {
-  id: string; // From Firestore document ID
-  createdAt: Timestamp; // From Firestore server timestamp
-  transcript: string;
-  languages: string[];
+export type AnalysisAnalytics = {
   summary: string;
+  languages: string[];
   overallSentiment: 'Positive' | 'Neutral' | 'Negative' | string;
   primaryCustomerIntent: string;
   keyTopics: string[];
   sentimentTimeline: SentimentPoint[];
-  policyViolations: PolicyViolation[];
-  agentPerformance: AgentPerformance;
-  trends: TrendData;
+};
+
+export type AnalysisClassifications = {
   callOutcome: CallOutcome;
   riskScore: RiskScore;
+  policyViolations: PolicyViolation[];
+};
+
+export type AnalysisResult = {
+  id: string; // From Firestore document ID
+  createdAt: Timestamp; // From Firestore server timestamp
+  transcript: string;
+  analytics: AnalysisAnalytics;
+  classifications: AnalysisClassifications;
+  agentPerformance: AgentPerformance;
+  trends: TrendData;
 };

@@ -153,7 +153,7 @@ export default function DashboardPage() {
 
     const topicCounts = new Map<string, number>();
     analysisHistory.forEach((analysis) => {
-      analysis.keyTopics.forEach((topic) => {
+      analysis.analytics.keyTopics.forEach((topic) => {
         topicCounts.set(topic, (topicCounts.get(topic) || 0) + 1);
       });
     });

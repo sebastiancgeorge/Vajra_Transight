@@ -24,28 +24,40 @@ Customer: No, that's it. Thank you, Sarah. You've been very helpful. I was ready
 
 Agent (Sarah): You're very welcome! We want you to enjoy your camera. Have a great day and an amazing trip!`;
 
-export const mockAnalysisResult: AnalysisResult = {
+export const mockAnalysisResult: Omit<AnalysisResult, 'id' | 'createdAt'> = {
   transcript: mockTranscript,
-  languages: ['English (US)'],
-  summary: 'The customer reported a severe battery drain issue with their recently purchased XT-5000 camera. The agent, Sarah, identified the problem as part of a known faulty batch, and efficiently processed a replacement unit with an additional complimentary battery, leading to high customer satisfaction.',
-  overallSentiment: 'Positive',
-  primaryCustomerIntent: 'Technical Support',
-  keyTopics: ['Battery Issue', 'XT-5000 Camera', 'Replacement Process', 'Customer Frustration', 'Policy Adherence'],
-  sentimentTimeline: [
-    { segment: 1, time: '0:00', sentiment: -0.8, text: 'Customer expresses frustration about battery.' },
-    { segment: 2, time: '0:25', sentiment: 0.2, text: 'Agent is empathetic and starts troubleshooting.' },
-    { segment: 3, time: '0:50', sentiment: -0.6, text: 'Customer frustration peaks, compares to competitor.' },
-    { segment: 4, time: '1:15', sentiment: 0.9, text: 'Agent provides an excellent resolution.' },
-    { segment: 5, time: '1:45', sentiment: 1.0, text: 'Customer expresses high satisfaction and gratitude.' },
-  ],
-  policyViolations: [
-    {
-      policyViolated: 'Data Security - PII Handling',
-      violationDescription: "The agent did not explicitly ask for the customer's consent before confirming the shipping address on a recorded line.",
-      relevantExcerpt: 'I just need to confirm your shipping address.',
-      severity: 'LOW',
+  analytics: {
+    languages: ['English (US)'],
+    summary: 'The customer reported a severe battery drain issue with their recently purchased XT-5000 camera. The agent, Sarah, identified the problem as part of a known faulty batch, and efficiently processed a replacement unit with an additional complimentary battery, leading to high customer satisfaction.',
+    overallSentiment: 'Positive',
+    primaryCustomerIntent: 'Technical Support',
+    keyTopics: ['Battery Issue', 'XT-5000 Camera', 'Replacement Process', 'Customer Frustration', 'Policy Adherence'],
+    sentimentTimeline: [
+      { segment: 1, time: '0:00', sentiment: -0.8, text: 'Customer expresses frustration about battery.' },
+      { segment: 2, time: '0:25', sentiment: 0.2, text: 'Agent is empathetic and starts troubleshooting.' },
+      { segment: 3, time: '0:50', sentiment: -0.6, text: 'Customer frustration peaks, compares to competitor.' },
+      { segment: 4, time: '1:15', sentiment: 0.9, text: 'Agent provides an excellent resolution.' },
+      { segment: 5, time: '1:45', sentiment: 1.0, text: 'Customer expresses high satisfaction and gratitude.' },
+    ],
+  },
+  classifications: {
+    policyViolations: [
+      {
+        policyViolated: 'Data Security - PII Handling',
+        violationDescription: "The agent did not explicitly ask for the customer's consent before confirming the shipping address on a recorded line.",
+        relevantExcerpt: 'I just need to confirm your shipping address.',
+        severity: 'LOW',
+      },
+    ],
+    callOutcome: {
+      outcome: 'Resolved',
+      reason: 'Agent provided a satisfactory resolution by ordering a replacement camera and an extra battery.'
     },
-  ],
+    riskScore: {
+      score: 15,
+      reason: 'Initial customer frustration was high, but the agent\'s effective de-escalation and resolution significantly lowered the risk of churn.'
+    },
+  },
   agentPerformance: {
     agentName: 'Sarah',
     agentId: 'A-78910',
@@ -73,14 +85,6 @@ export const mockAnalysisResult: AnalysisResult = {
     talkToListenRatio: '35:65',
     interruptionCount: 0,
     sentimentTrend: 'Improving',
-  },
-  callOutcome: {
-    outcome: 'Resolved',
-    reason: 'Agent provided a satisfactory resolution by ordering a replacement camera and an extra battery.'
-  },
-  riskScore: {
-    score: 15,
-    reason: 'Initial customer frustration was high, but the agent\'s effective de-escalation and resolution significantly lowered the risk of churn.'
   },
   trends: {
     topIssues: [
