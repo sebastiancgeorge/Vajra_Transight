@@ -2,13 +2,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Allow read/write access to the 'conversations' collection for any authenticated user.
-    // This is a simple rule for getting started. For production, you would want to
-    // implement more granular, organization-based security rules.
-    match /conversations/{conversationId} {
-      allow read, write: if request.auth != null;
-    }
-
     /**
      * =====================================================================
      *                          DOCUMENTATION
@@ -256,6 +249,7 @@ service cloud.firestore {
 
     /**
      * @description Secures the singleton analysis result document for a conversation.
+     *              The analysis result is now a single document containing all nested data.
      * @path /organizations/{organizationId}/conversations/{conversationId}/analysisResult/{docId}
      * @allow (get) Any member of the organization can read the analysis result.
      * @allow (create, update, delete) Only admins of the organization can modify the result.
@@ -265,46 +259,6 @@ service cloud.firestore {
     match /organizations/{organizationId}/conversations/{conversationId}/analysisResult/{docId} {
       allow get: if canRead(organizationId);
       allow list: if false;
-      allow create: if canWrite(organizationId);
-      allow update: if resource != null && canWrite(organizationId);
-      allow delete: if resource != null && canWrite(organizationId);
-    }
-
-    /**
-     * @description Secures nested subcollections of a conversation's analysis result.
-     * @path /organizations/{organizationId}/conversations/{conversationId}/analysisResult/sentimentTimeline/{entryId}
-     * @path /organizations/{organizationId}/conversations/{conversationId}/analysisResult/policyViolations/{violationId}
-     * @allow (get, list) Any member of the organization can read the data.
-     * @allow (create, update, delete) Only admins of the organization can write the data.
-     * @deny A non-member cannot access any data. A non-admin cannot write data.
-     * @principle Inherits security posture from the parent organization, providing read for all members and write for admins.
-     */
-    match /organizations/{organizationId}/conversations/{conversationId}/analysisResult/sentimentTimeline/{docId} {
-      allow get: if canRead(organizationId);
-      allow list: if canRead(organizationId);
-      allow create: if canWrite(organizationId);
-      allow update: if resource != null && canWrite(organizationId);
-      allow delete: if resource != null && canWrite(organizationId);
-    }
-    match /organizations/{organizationId}/conversations/{conversationId}/analysisResult/policyViolations/{docId} {
-      allow get: if canRead(organizationId);
-      allow list: if canRead(organizationId);
-      allow create: if canWrite(organizationId);
-      allow update: if resource != null && canWrite(organizationId);
-      allow delete: if resource != null && canWrite(organizationId);
-    }
-
-    /**
-     * @description Secures performance metrics for a specific agent.
-     * @path /organizations/{organizationId}/agents/{agentId}/performanceMetrics/{metricId}
-     * @allow (get, list) Any member of the organization can read agent performance metrics.
-     * @allow (create, update, delete) Only admins of the organization can write metrics.
-     * @deny A non-member cannot access any data. A non-admin cannot write data.
-     * @principle Provides organization-wide transparency for performance data, with write access restricted to admins.
-     */
-    match /organizations/{organizationId}/agents/{agentId}/performanceMetrics/{metricId} {
-      allow get: if canRead(organizationId);
-      allow list: if canRead(organizationId);
       allow create: if canWrite(organizationId);
       allow update: if resource != null && canWrite(organizationId);
       allow delete: if resource != null && canWrite(organizationId);
