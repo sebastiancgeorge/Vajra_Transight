@@ -153,9 +153,11 @@ export default function DashboardPage() {
 
     const topicCounts = new Map<string, number>();
     analysisHistory.forEach((analysis) => {
-      analysis.analytics.keyTopics.forEach((topic) => {
-        topicCounts.set(topic, (topicCounts.get(topic) || 0) + 1);
-      });
+      if (analysis.analytics && Array.isArray(analysis.analytics.keyTopics)) {
+        analysis.analytics.keyTopics.forEach((topic) => {
+          topicCounts.set(topic, (topicCounts.get(topic) || 0) + 1);
+        });
+      }
     });
 
     const sortedTopics = Array.from(topicCounts.entries())
