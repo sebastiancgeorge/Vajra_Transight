@@ -12,7 +12,7 @@ This endpoint accepts raw audio (Base64 encoded) and returns a text transcript.
 
 🔹 Request Format
 
-The audioDataUri must be a valid Base64 string in Data URI format.
+The audioDataUri must be a valid Base64 string in Data URI format
 
 {
   "audioDataUri": "data:audio/wav;base64,UklGRiSDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YS..."
