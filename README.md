@@ -80,6 +80,106 @@ npm run dev
 
 The application will be available at `http://localhost:9002`.
 
+## Architectural Overview
+### 1) Client/Application Layer (Next.js Frontend)
+
+Next.js App — UI built with React and TypeScript
+
+Dashboard for uploading audio files
+
+Displays transcription & AI analysis results
+
+Uses Tailwind CSS + ShadCN UI for styling
+
+User Input Flows
+
+Upload audio
+
+Request transcript
+
+Request conversation analysis
+
+↳ This layer interacts with backend APIs for processing.
+
+### 2) API / Processing Layer
+
+This is where the backend logic runs:
+
+🛠️ Primary API Routes
+Route	Function
+POST /api/transcribe	Uploads audio, sends it to speech-to-text service
+POST /api/analyze	Takes transcript and runs AI analysis
+🔗 External Services
+
+AssemblyAI — Used for converting audio to text
+
+Responds with accurate transcription
+
+AI (Genkit + Google Gemini) — Runs analysis on transcripts
+
+Produces insights like sentiment, compliance, topics, etc.
+
+### 3) AI Intelligence & Analysis Layer
+
+This layer orchestrates AI workflows:
+
+Genkit Workflows orchestrate AI calls and analysis logic
+
+Google Gemini Models process and interpret transcripts
+
+Analysis includes:
+
+Policy compliance detection
+
+Intent extraction
+
+Sentiment analysis
+
+Agent performance metrics
+(as implied by README description)
+
+### 4) Data & Storage Layer (Firebase)
+
+The solution uses Firebase for backend storage and user management:
+
+Firestore Database
+
+Stores transcripts
+
+Stores analysis results
+
+Firebase Authentication
+
+Anonymous login for users
+
+Used for access control
+
+Firestore Rules (development)
+
+Currently broad (development use), can be hardened for production
+
+### 📊 Data & Process Flow
+
+Here’s how data flows through the system:
+
+[User Uploads Audio]
+            ↓
+      Next.js Frontend
+            ↓
+     → POST /api/transcribe
+            ↓
+  AssemblyAI Speech-to-Text
+            ↓ (Transcript)
+     → POST /api/analyze
+            ↓
+        Genkit → AI Model
+            ↓
+      Analysis Results Stored
+            ↓
+     Firebase Firestore Database
+            ↓
+  Rendered Back to Frontend UI
+
 ## API Endpoints
 
 The application exposes two main API endpoints. See `docs/openapi.yaml` for a detailed specification.
